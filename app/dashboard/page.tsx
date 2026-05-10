@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import { Problem } from '@/types/problem'
@@ -21,6 +21,7 @@ interface ProblemExt extends Problem {
   resolved?:     boolean
   is_anonymous?: boolean
   user_name?:    string
+  photo_urls?:   string[]
 }
 
 const i18n = {
@@ -68,6 +69,7 @@ const i18n = {
     fDesc:          'Descrição',
     fLoc:           'Localização',
     fSev:           'Gravidade',
+    fPhoto:         'Fotos (até 3)',
     fNamePh:        'ex: Buraco no passeio',
     fDescPh:        'Descreve o problema...',
     fLocPh:         'Clica no mapa para marcar o local',
@@ -75,6 +77,7 @@ const i18n = {
     save:           'Guardar alterações',
     register:       'Registar problema',
     saving:         'A guardar...',
+    uploading:      'A enviar fotos...',
     markFirst:      'Marca o local primeiro',
     noResults:      'sem resultados',
     occurrences:    'ocorrências',
@@ -86,13 +89,15 @@ const i18n = {
     mine:           'meu',
     ofTotal:        'do total',
     sevDist:        'distribuição por gravidade',
-    errCreate:      'Erro ao criar problema. Verifica se todos os campos estão preenchidos e se a tua sessão está ativa.',
+    errCreate:      'Erro ao criar problema.',
     errEdit:        'Erro ao editar o problema.',
     fillFields:     'Preenche o nome e a descrição.',
     pickLocation:   'Clica no mapa para escolher a localização.',
     useMyLocation:  'Usar minha localização',
     anonymous:      'Publicar como anónimo',
     anonLabel:      'Anónimo',
+    addPhoto:       'Adicionar foto',
+    maxPhotos:      'Máximo de 3 fotos atingido',
   },
   en: {
     tagline:        'collaborative urban map',
@@ -138,6 +143,7 @@ const i18n = {
     fDesc:          'Description',
     fLoc:           'Location',
     fSev:           'Severity',
+    fPhoto:         'Photos (up to 3)',
     fNamePh:        'e.g. Broken pavement',
     fDescPh:        'Describe the problem...',
     fLocPh:         'Click the map to mark the location',
@@ -145,6 +151,7 @@ const i18n = {
     save:           'Save changes',
     register:       'Register problem',
     saving:         'Saving...',
+    uploading:      'Uploading photos...',
     markFirst:      'Mark location first',
     noResults:      'no results',
     occurrences:    'occurrences',
@@ -156,13 +163,15 @@ const i18n = {
     mine:           'mine',
     ofTotal:        'of total',
     sevDist:        'severity distribution',
-    errCreate:      'Error creating problem. Check all fields and your session.',
+    errCreate:      'Error creating problem.',
     errEdit:        'Error editing problem.',
     fillFields:     'Fill in the name and description.',
     pickLocation:   'Click the map to choose a location.',
     useMyLocation:  'Use my location',
     anonymous:      'Publish as anonymous',
     anonLabel:      'Anonymous',
+    addPhoto:       'Add photo',
+    maxPhotos:      'Maximum of 3 photos reached',
   },
 }
 
@@ -199,9 +208,25 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   }
 }
 
+// ── Upload de fotos para o Supabase Storage ────────────────────────────────
+async function uploadPhotos(files: File[]): Promise<string[]> {
+  const urls: string[] = []
+  for (const file of files) {
+    const ext      = file.name.split('.').pop() || 'jpg'
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage
+      .from('problem-photos')
+      .upload(filename, file, { cacheControl: '3600', upsert: false })
+    if (error) { console.error('Upload error:', error); continue }
+    const { data } = supabase.storage.from('problem-photos').getPublicUrl(filename)
+    urls.push(data.publicUrl)
+  }
+  return urls
+}
+
 export default function DashboardPage() {
 
-  const [lang, setLang]                     = useState<'pt' | 'en'>('pt')
+  const [lang, setLang] = useState<'pt' | 'en'>('pt')
   const t = i18n[lang]
 
   const [problems,          setProblems]         = useState<ProblemExt[]>([])
@@ -209,6 +234,7 @@ export default function DashboardPage() {
   const [currentUserName,   setCurrentUserName]   = useState<string | null>(null)
   const [userConfirmations, setUserConfirmations] = useState<string[]>([])
   const [loading,           setLoading]           = useState(false)
+  const [uploadingPhotos,   setUploadingPhotos]   = useState(false)
   const [formMode,          setFormMode]          = useState<FormMode>(null)
   const [editingId,         setEditingId]         = useState<string | null>(null)
   const [selectedId,        setSelectedId]        = useState<string | null>(null)
@@ -220,6 +246,16 @@ export default function DashboardPage() {
   const [previewPin,        setPreviewPin]        = useState<{ lat: number; lng: number } | null>(null)
   const [activeNav,         setActiveNav]         = useState('dashboard')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  // ── Estado das fotos ───────────────────────────────────────────────────────
+  // photoFiles: ficheiros a fazer upload (novos)
+  // photoPreviews: URLs locais para preview (objectURL)
+  const [photoFiles,    setPhotoFiles]    = useState<File[]>([])
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  // photoUrlsExisting: URLs já guardadas (edição)
+  const [photoUrlsExisting, setPhotoUrlsExisting] = useState<string[]>([])
+
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const emptyForm = {
     name: '', description: '', location: '',
@@ -258,6 +294,31 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchProblems() }, [fetchProblems])
 
+  // ── Gerir fotos selecionadas ───────────────────────────────────────────────
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const totalExisting = photoUrlsExisting.length + photoPreviews.length
+    const slots = 3 - totalExisting
+    if (slots <= 0) { alert(t.maxPhotos); return }
+    const toAdd = files.slice(0, slots)
+    setPhotoFiles(prev => [...prev, ...toAdd])
+    setPhotoPreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))])
+    // reset input para permitir re-selecionar o mesmo ficheiro
+    if (photoInputRef.current) photoInputRef.current.value = ''
+  }
+
+  const removeNewPhoto = (idx: number) => {
+    URL.revokeObjectURL(photoPreviews[idx])
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== idx))
+    setPhotoFiles(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const removeExistingPhoto = (idx: number) => {
+    setPhotoUrlsExisting(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const totalPhotos = photoUrlsExisting.length + photoPreviews.length
+
   // ── Criar ──────────────────────────────────────────────────────────────────
   const handleCreate = async () => {
     if (form.name.trim().length < 3)         { alert('Nome demasiado curto'); return }
@@ -265,8 +326,19 @@ export default function DashboardPage() {
     if (!form.lat || !form.lng)              { alert(t.pickLocation); return }
 
     setLoading(true)
+
+    // 1. Upload fotos
+    let photoUrls: string[] = []
+    if (photoFiles.length > 0) {
+      setUploadingPhotos(true)
+      photoUrls = await uploadPhotos(photoFiles)
+      setUploadingPhotos(false)
+    }
+
+    // 2. Reverse geocode
     const locationName = await reverseGeocode(form.lat, form.lng)
 
+    // 3. Insert
     const payload = {
       name:            form.name.trim(),
       description:     form.description.trim(),
@@ -279,6 +351,7 @@ export default function DashboardPage() {
       user_id:         currentUserId,
       user_name:       form.is_anonymous ? null : (currentUserName ?? null),
       is_anonymous:    form.is_anonymous,
+      photo_urls:      photoUrls,
     }
 
     const { data, error } = await supabase.from('problems').insert([payload]).select()
@@ -300,14 +373,29 @@ export default function DashboardPage() {
       alert(t.fillFields); return
     }
     setLoading(true)
+
+    // Upload novas fotos se houver
+    let newUrls: string[] = []
+    if (photoFiles.length > 0) {
+      setUploadingPhotos(true)
+      newUrls = await uploadPhotos(photoFiles)
+      setUploadingPhotos(false)
+    }
+
+    const allPhotoUrls = [...photoUrlsExisting, ...newUrls]
+
     const updates: Partial<ProblemExt> = {
-      name: form.name.trim(), description: form.description.trim(), gravidade: form.gravidade,
+      name:        form.name.trim(),
+      description: form.description.trim(),
+      gravidade:   form.gravidade,
+      photo_urls:  allPhotoUrls,
     }
     if (form.lat && form.lng) {
       updates.latitude  = form.lat
       updates.longitude = form.lng
       updates.location  = await reverseGeocode(form.lat, form.lng)
     }
+
     const { error } = await supabase.from('problems').update(updates).eq('id', editingId)
     if (error) { console.error(error); alert(t.errEdit); setLoading(false); return }
     setProblems(prev => prev.map(p => p.id === editingId ? { ...p, ...updates } : p))
@@ -351,7 +439,13 @@ export default function DashboardPage() {
 
   // ── Formulário ─────────────────────────────────────────────────────────────
   const openCreate = () => {
-    setForm(emptyForm); setEditingId(null); setPreviewPin(null); setFormMode('criar')
+    setForm(emptyForm)
+    setEditingId(null)
+    setPreviewPin(null)
+    setPhotoFiles([])
+    setPhotoPreviews([])
+    setPhotoUrlsExisting([])
+    setFormMode('criar')
   }
 
   const openEdit = (p: ProblemExt) => {
@@ -363,11 +457,21 @@ export default function DashboardPage() {
     })
     setEditingId(p.id)
     setPreviewPin(p.latitude && p.longitude ? { lat: p.latitude, lng: p.longitude } : null)
+    setPhotoFiles([])
+    setPhotoPreviews([])
+    setPhotoUrlsExisting(p.photo_urls ?? [])
     setFormMode('editar')
   }
 
   const closeForm = () => {
-    setFormMode(null); setEditingId(null); setPreviewPin(null); setForm(emptyForm)
+    photoPreviews.forEach(url => URL.revokeObjectURL(url))
+    setFormMode(null)
+    setEditingId(null)
+    setPreviewPin(null)
+    setForm(emptyForm)
+    setPhotoFiles([])
+    setPhotoPreviews([])
+    setPhotoUrlsExisting([])
   }
 
   // ── Clique no mapa ─────────────────────────────────────────────────────────
@@ -376,12 +480,6 @@ export default function DashboardPage() {
     setPreviewPin({ lat, lng })
     setForm(prev => ({ ...prev, lat, lng, location: '' }))
   }, [formMode])
-
-  // ── Clique num pin — seleciona e abre sidebar no mobile ────────────────────
-  const handlePinClick = useCallback((id: string) => {
-    setSelectedId(id)
-    setMobileSidebarOpen(true)
-  }, [])
 
   // ── Localização do dispositivo ─────────────────────────────────────────────
   const handleUseMyLocation = () => {
@@ -438,10 +536,98 @@ export default function DashboardPage() {
     color: '#6b7280', cursor: 'pointer', transition: 'all 0.15s',
   }
 
-  // ── Conteúdo da sidebar (partilhado desktop + mobile drawer) ───────────────
+  // ── Secção de fotos (reutilizada no form) ──────────────────────────────────
+  const PhotoSection = (
+    <div>
+      <label style={labelSt}>{t.fPhoto}</label>
+
+      {/* Grid de previews */}
+      {(photoUrlsExisting.length > 0 || photoPreviews.length > 0) && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+          {/* Fotos já guardadas (edição) */}
+          {photoUrlsExisting.map((url, idx) => (
+            <div key={`ex-${idx}`} style={{ position: 'relative', width: 80, height: 80 }}>
+              <img src={url} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              <button
+                onClick={() => removeExistingPhoto(idx)}
+                style={{
+                  position: 'absolute', top: -6, right: -6,
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: '#DC2626', color: '#fff',
+                  border: 'none', cursor: 'pointer',
+                  fontSize: 12, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >×</button>
+            </div>
+          ))}
+
+          {/* Novas fotos (preview local) */}
+          {photoPreviews.map((url, idx) => (
+            <div key={`new-${idx}`} style={{ position: 'relative', width: 80, height: 80 }}>
+              <img src={url} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '2px solid #1A56DB' }} />
+              <button
+                onClick={() => removeNewPhoto(idx)}
+                style={{
+                  position: 'absolute', top: -6, right: -6,
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: '#DC2626', color: '#fff',
+                  border: 'none', cursor: 'pointer',
+                  fontSize: 12, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Botão adicionar foto */}
+      {totalPhotos < 3 && (
+        <>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handlePhotoSelect}
+          />
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              width: '100%', padding: '10px 14px',
+              border: '1.5px dashed #d1d5db', borderRadius: 10,
+              background: '#f9fafb', color: '#6b7280',
+              cursor: 'pointer', fontFamily: body, fontSize: 13,
+              transition: 'all 0.15s',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            {t.addPhoto}
+            <span style={{ marginLeft: 'auto', fontFamily: mono, fontSize: 11, color: '#9ca3af' }}>
+              {totalPhotos}/3
+            </span>
+          </button>
+        </>
+      )}
+
+      {totalPhotos >= 3 && (
+        <div style={{ fontSize: 12, color: '#9ca3af', fontFamily: mono, padding: '8px 0' }}>
+          {t.maxPhotos}
+        </div>
+      )}
+    </div>
+  )
+
+  // ── Conteúdo partilhado da sidebar ─────────────────────────────────────────
   const SidebarContent = (
     <>
-      {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
         {([['todos',t.allProblems],['meus',t.myProblems]] as [ViewMode,string][]).map(([k,l]) => (
           <button key={k} className="sv-tab" onClick={() => setViewMode(k)} style={{
@@ -454,7 +640,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: '#e5e7eb', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
         {[
           { label: t.statTotal, value: filtered.length, sub: t.statProblems, color: undefined },
@@ -469,7 +654,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Filtros */}
       <div className="sv-filters" style={{ padding: '10px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         <div style={{ position: 'relative' }}>
           <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} width="13" height="13" viewBox="0 0 16 16" fill="none">
@@ -518,7 +702,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Lista */}
       <div style={{ flex: 1, overflowY: 'auto', padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: 32, fontSize: 13, color: '#9ca3af', fontFamily: mono }}>{t.noResults}</div>
@@ -531,6 +714,7 @@ export default function DashboardPage() {
           const edge             = isSelected ? '#1A56DB' : '#e5e7eb'
           const alreadyConfirmed = userConfirmations.includes(p.id)
           const authorLabel      = p.is_anonymous ? t.anonLabel : (p.user_name ?? null)
+          const hasPhotos        = p.photo_urls && p.photo_urls.length > 0
           return (
             <div key={p.id} className="sv-card"
               onClick={() => setSelectedId(isSelected ? null : p.id)}
@@ -553,10 +737,25 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                     {isOwner && <span style={{ fontFamily: mono, fontSize: 10, color: '#1A56DB', background: '#EFF6FF', borderRadius: 4, padding: '1px 5px', border: '1px solid #BFDBFE' }}>{t.mine}</span>}
                     {authorLabel && <span style={{ fontFamily: mono, fontSize: 10, color: '#6b7280', background: '#f9fafb', borderRadius: 4, padding: '1px 5px', border: '1px solid #e5e7eb' }}>{authorLabel}</span>}
+                    {hasPhotos && <span style={{ fontFamily: mono, fontSize: 10, color: '#6b7280', background: '#f9fafb', borderRadius: 4, padding: '1px 5px', border: '1px solid #e5e7eb' }}>📷 {p.photo_urls!.length}</span>}
                   </div>
                 </div>
               </div>
+
               <div style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.5, marginBottom: 7, paddingLeft: 17 }}>{p.description}</div>
+
+              {/* Fotos em miniatura no card */}
+              {hasPhotos && (
+                <div style={{ display: 'flex', gap: 5, paddingLeft: 17, marginBottom: 8 }}>
+                  {p.photo_urls!.slice(0, 3).map((url, i) => (
+                    <img key={i} src={url} alt="" onClick={e => e.stopPropagation()}
+                      style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid #e5e7eb', cursor: 'zoom-in' }}
+                      onClickCapture={e => { e.stopPropagation(); window.open(url, '_blank') }}
+                    />
+                  ))}
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 17, marginBottom: 7 }}>
                 <span style={{ fontFamily: mono, fontSize: 11, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
@@ -572,6 +771,7 @@ export default function DashboardPage() {
                   <span style={{ fontFamily: mono, fontSize: 10, color: '#9ca3af' }}>{vib}</span>
                 </div>
               </div>
+
               <div style={{ display: 'flex', gap: 5, paddingLeft: 17, paddingTop: 7, borderTop: '1px solid #f3f4f6', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button className="sv-btn-confirm" onClick={e => { e.stopPropagation(); handleConfirm(p.id) }}
                   disabled={alreadyConfirmed}
@@ -594,7 +794,7 @@ export default function DashboardPage() {
     </>
   )
 
-  // ── Formulário ─────────────────────────────────────────────────────────────
+  // ── Conteúdo do formulário ─────────────────────────────────────────────────
   const FormContent = (
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -664,6 +864,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── FOTOS ── */}
+      {PhotoSection}
+
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#6b7280', cursor: 'pointer', fontFamily: body }}>
         <input type="checkbox" checked={form.is_anonymous}
           onChange={e => setForm({ ...form, is_anonymous: e.target.checked })}
@@ -688,7 +891,7 @@ export default function DashboardPage() {
             transition: 'background 0.15s',
           }}
         >
-          {loading ? t.saving : formMode === 'editar' ? t.save : !previewPin ? t.markFirst : t.register}
+          {uploadingPhotos ? t.uploading : loading ? t.saving : formMode === 'editar' ? t.save : !previewPin ? t.markFirst : t.register}
         </button>
       </div>
     </>
@@ -719,77 +922,56 @@ export default function DashboardPage() {
         .sv-sort:hover { background: #f3f4f6!important; }
         .sv-drawer-input:focus { border-color: #1A56DB!important; outline: none; }
         .sv-loc-btn:hover { text-decoration: underline; }
-        .sv-logo-link { text-decoration: none; }
-        .sv-logo-link:focus { outline: none; }
 
-        /* ── Mobile sidebar slide-in ──────────────────────────────────── */
         .sv-mobile-sidebar {
-          position: fixed;
-          top: 0; left: 0; bottom: 0;
-          width: 75%;
-          max-width: 340px;
-          background: #ffffff;
-          z-index: 700;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
+          position: fixed; top: 0; left: 0; bottom: 0;
+          width: 75%; max-width: 340px;
+          background: #ffffff; z-index: 700;
+          display: flex; flex-direction: column; overflow: hidden;
           box-shadow: 4px 0 24px rgba(0,0,0,0.18);
           transform: translateX(-100%);
           transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
         }
         .sv-mobile-sidebar.open { transform: translateX(0); }
-
         .sv-mobile-sidebar-overlay {
-          position: fixed; inset: 0;
-          background: rgba(0,0,0,0.38);
-          z-index: 699;
-          opacity: 0; pointer-events: none;
+          position: fixed; inset: 0; background: rgba(0,0,0,0.38);
+          z-index: 699; opacity: 0; pointer-events: none;
           transition: opacity 0.25s ease;
         }
         .sv-mobile-sidebar-overlay.open { opacity: 1; pointer-events: all; }
+        .sv-fab:hover { transform: scale(1.07); box-shadow: 0 6px 20px rgba(26,86,219,0.45) !important; }
+        .sv-fab:active { transform: scale(0.97); }
 
-        /* FAB hover */
-        .sv-fab-list:hover { transform: scale(1.07); box-shadow: 0 6px 20px rgba(26,86,219,0.45) !important; }
-        .sv-fab-list:active { transform: scale(0.97); }
-
-        /* ════ MOBILE ≤ 768px ══════════════════════════════════════════ */
         @media (max-width: 768px) {
-          .sv-topbar { padding: 0 14px !important; height: 50px !important; gap: 10px !important; }
+          .sv-topbar     { padding: 0 14px !important; height: 50px !important; gap: 10px !important; }
           .sv-nav-center { display: none !important; }
           .sv-right-desktop { display: none !important; }
-          .sv-logo-sub { display: none !important; }
-          .sv-logo-name { font-size: 15px !important; }
+          .sv-logo-sub   { display: none !important; }
+          .sv-logo-name  { font-size: 15px !important; }
           .sv-sidebar-desktop { display: none !important; }
-          .sv-body { flex-direction: column !important; }
-          .sv-main { flex: 1 !important; min-height: 0 !important; }
-          .sv-detail { display: none !important; }
-          .sv-sort-row { display: none !important; }
-          .sv-stat-num { font-size: 18px !important; }
-          .sv-stat-cell { padding: 10px 10px 8px !important; }
-          .sv-filters { padding: 8px 10px !important; gap: 7px !important; }
+          .sv-body       { flex-direction: column !important; }
+          .sv-main       { flex: 1 !important; min-height: 0 !important; }
+          .sv-detail     { display: none !important; }
+          .sv-sort-row   { display: none !important; }
+          .sv-stat-num   { font-size: 18px !important; }
+          .sv-stat-cell  { padding: 10px 10px 8px !important; }
+          .sv-filters    { padding: 8px 10px !important; gap: 7px !important; }
           .sv-desktop-drawer { display: none !important; }
-          /* Subbar mais compacta */
-          .sv-subbar { padding: 5px 12px !important; }
+          .sv-subbar     { padding: 5px 12px !important; }
         }
-
-        /* ════ DESKTOP > 768px ═════════════════════════════════════════ */
         @media (min-width: 769px) {
-          .sv-mobile-new-btn { display: none !important; }
+          .sv-mobile-new-btn     { display: none !important; }
           .sv-mobile-sheet-overlay { display: none !important; }
-          .sv-mobile-bottom-sheet { display: none !important; }
-          .sv-mobile-sidebar { display: none !important; }
+          .sv-mobile-bottom-sheet  { display: none !important; }
+          .sv-mobile-sidebar     { display: none !important; }
           .sv-mobile-sidebar-overlay { display: none !important; }
-          .sv-fab-list { display: none !important; }
+          .sv-fab        { display: none !important; }
         }
       `}</style>
 
-      {/* ══════════════════════════ TOP BAR ══════════════════════════════ */}
-      <div className="sv-topbar" style={{
-        display: 'flex', alignItems: 'center', padding: '0 24px', height: 58,
-        background: '#ffffff', borderBottom: '1px solid #e5e7eb', flexShrink: 0, gap: 16, zIndex: 10,
-      }}>
-        {/* Logo → home */}
-        <a href="/" className="sv-logo-link" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+      {/* TOP BAR */}
+      <div className="sv-topbar" style={{ display: 'flex', alignItems: 'center', padding: '0 24px', height: 58, background: '#ffffff', borderBottom: '1px solid #e5e7eb', flexShrink: 0, gap: 16, zIndex: 10 }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, textDecoration: 'none' }}>
           <div style={{ width: 44, height: 44, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <img src="/logo.png" style={{ height: 44, borderRadius: 9, display: 'block' }} alt="StreetViz"
               onError={(e) => {
@@ -809,36 +991,22 @@ export default function DashboardPage() {
             <div className="sv-logo-name" style={{ fontFamily: mono, fontSize: 17, fontWeight: 500, letterSpacing: '0.03em', lineHeight: 1.1, color: '#111827' }}>
               Street<span style={{ color: '#1A56DB' }}>Viz</span>
             </div>
-            <div className="sv-logo-sub" style={{ fontFamily: mono, fontSize: 10, color: '#9ca3af', letterSpacing: '0.05em' }}>
-              {t.tagline}
-            </div>
+            <div className="sv-logo-sub" style={{ fontFamily: mono, fontSize: 10, color: '#9ca3af', letterSpacing: '0.05em' }}>{t.tagline}</div>
           </div>
         </a>
 
-        {/* Nav — desktop only */}
         <div className="sv-nav-center" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <div style={{ display: 'flex', gap: 1, background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 11, padding: 3 }}>
             {([['dashboard',t.navDashboard],['analytics',t.navAnalytics],['reports',t.navReports]] as [string,string][]).map(([k,l]) => (
-              <button key={k} className="sv-tab" onClick={() => setActiveNav(k)} style={{
-                fontFamily: body, fontSize: 14, fontWeight: 400, padding: '6px 22px',
-                border: 'none', borderRadius: 8, cursor: 'pointer',
-                background: activeNav === k ? '#1A56DB' : 'transparent',
-                color:      activeNav === k ? '#ffffff' : '#6b7280',
-              }}>{l}</button>
+              <button key={k} className="sv-tab" onClick={() => setActiveNav(k)} style={{ fontFamily: body, fontSize: 14, fontWeight: 400, padding: '6px 22px', border: 'none', borderRadius: 8, cursor: 'pointer', background: activeNav===k?'#1A56DB':'transparent', color: activeNav===k?'#ffffff':'#6b7280' }}>{l}</button>
             ))}
           </div>
         </div>
 
-        {/* Direita — desktop only */}
         <div className="sv-right-desktop" style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
           <div style={{ display: 'flex', gap: 1, background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 8, padding: 2 }}>
             {(['pt','en'] as const).map(l => (
-              <button key={l} onClick={() => setLang(l)} style={{
-                fontFamily: mono, fontSize: 11, padding: '3px 9px', border: 'none', borderRadius: 6, cursor: 'pointer',
-                background: lang === l ? '#ffffff' : 'transparent',
-                color:      lang === l ? '#111827' : '#9ca3af',
-                fontWeight: lang === l ? 500 : 400,
-              }}>{l.toUpperCase()}</button>
+              <button key={l} onClick={() => setLang(l)} style={{ fontFamily: mono, fontSize: 11, padding: '3px 9px', border: 'none', borderRadius: 6, cursor: 'pointer', background: lang===l?'#ffffff':'transparent', color: lang===l?'#111827':'#9ca3af', fontWeight: lang===l?500:400 }}>{l.toUpperCase()}</button>
             ))}
           </div>
           <button onClick={() => setShowStats(true)} style={{ fontSize: 15, padding: '6px 12px', background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', borderRadius: 9, cursor: 'pointer' }}>📊</button>
@@ -846,39 +1014,24 @@ export default function DashboardPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', display: 'inline-block', animation: 'pulse 2s infinite' }} />
             {t.systemActive}
           </div>
-          <button onClick={openCreate} style={{ fontFamily: body, fontSize: 15, fontWeight: 500, padding: '8px 22px', background: '#1A56DB', color: '#ffffff', border: 'none', borderRadius: 9, cursor: 'pointer' }}>
-            {t.newProblem}
-          </button>
+          <button onClick={openCreate} style={{ fontFamily: body, fontSize: 15, fontWeight: 500, padding: '8px 22px', background: '#1A56DB', color: '#ffffff', border: 'none', borderRadius: 9, cursor: 'pointer' }}>{t.newProblem}</button>
         </div>
 
-        {/* Mobile: só botão novo à direita */}
         <div className="sv-mobile-new-btn" style={{ marginLeft: 'auto', flexShrink: 0 }}>
-          <button onClick={openCreate} style={{
-            fontFamily: body, fontSize: 13, fontWeight: 500,
-            padding: '7px 14px', background: '#1A56DB', color: '#ffffff',
-            border: 'none', borderRadius: 8, cursor: 'pointer',
-          }}>
-            {t.newProblem}
-          </button>
+          <button onClick={openCreate} style={{ fontFamily: body, fontSize: 13, fontWeight: 500, padding: '7px 14px', background: '#1A56DB', color: '#ffffff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>{t.newProblem}</button>
         </div>
       </div>
 
-      {/* ══════════════════════════ BODY ═════════════════════════════════ */}
+      {/* BODY */}
       <div className="sv-body" style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
 
         {/* Desktop sidebar */}
-        <div className="sv-sidebar-desktop" style={{
-          width: 395, flexShrink: 0, background: '#ffffff',
-          borderRight: '1px solid #e5e7eb',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        }}>
+        <div className="sv-sidebar-desktop" style={{ width: 395, flexShrink: 0, background: '#ffffff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {SidebarContent}
         </div>
 
-        {/* Main — mapa + detalhe */}
+        {/* Main */}
         <div className="sv-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-
-          {/* Subbar */}
           <div className="sv-subbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 14px', background: '#ffffff', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
             <div style={{ fontFamily: mono, fontSize: 12, color: '#9ca3af' }}>
               Porto, PT &rsaquo; <span style={{ color: '#111827' }}>{t.allZones}</span>
@@ -888,18 +1041,15 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Mapa — full no mobile */}
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative', minHeight: 0 }}>
             <LeafletMapWrapper
               problems={filtered}
               onMapClick={handleMapClick}
               clickEnabled={!!formMode}
               previewPin={previewPin}
-              
             />
           </div>
 
-          {/* Detalhe — só desktop */}
           <div className="sv-detail" style={{ height: 185, background: '#ffffff', borderTop: '1px solid #e5e7eb', padding: '14px 20px', flexShrink: 0, overflowY: 'auto' }}>
             {!selected ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 13, color: '#9ca3af', fontFamily: mono }}>{t.detailEmpty}</div>
@@ -909,7 +1059,18 @@ export default function DashboardPage() {
                   <SevDot g={selected.gravidade} size={10} />
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>{selected.name}</div>
                 </div>
-                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12, lineHeight: 1.55 }}>{selected.description}</div>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 10, lineHeight: 1.55 }}>{selected.description}</div>
+                {/* Fotos no painel detalhe */}
+                {selected.photo_urls && selected.photo_urls.length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                    {selected.photo_urls.map((url, i) => (
+                      <img key={i} src={url} alt=""
+                        onClick={() => window.open(url, '_blank')}
+                        style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 7, border: '1px solid #e5e7eb', cursor: 'zoom-in' }}
+                      />
+                    ))}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', rowGap: 10 }}>
                   {[
                     {label:t.detailLoc,  value:selected.location??'—'},
@@ -938,100 +1099,49 @@ export default function DashboardPage() {
 
         {/* Desktop form drawer */}
         {formMode && (
-          <div className="sv-desktop-drawer" style={{
-            position: 'absolute', left: 395, bottom: 0,
-            width: 350, zIndex: 400,
-            background: '#ffffff',
-            borderTop: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb',
-            boxShadow: '4px -4px 24px rgba(0,0,0,0.10)',
-            padding: '20px 18px 24px',
-            display: 'flex', flexDirection: 'column', gap: 14,
-            animation: 'fadeUp 0.22s ease',
-            maxHeight: '80vh', overflowY: 'auto',
-          }}>
+          <div className="sv-desktop-drawer" style={{ position: 'absolute', left: 395, bottom: 0, width: 350, zIndex: 400, background: '#ffffff', borderTop: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb', boxShadow: '4px -4px 24px rgba(0,0,0,0.10)', padding: '20px 18px 24px', display: 'flex', flexDirection: 'column', gap: 14, animation: 'fadeUp 0.22s ease', maxHeight: '80vh', overflowY: 'auto' }}>
             {FormContent}
           </div>
         )}
       </div>
 
-      {/* ════ FAB — botão flutuante para abrir sidebar no mobile ═════════ */}
-      <button
-        className="sv-fab-list"
-        onClick={() => setMobileSidebarOpen(true)}
-        aria-label="Abrir lista de problemas"
-        style={{
-          position: 'fixed', bottom: 24, left: 20, zIndex: 600,
-          width: 52, height: 52, borderRadius: '50%',
-          background: '#1A56DB', color: '#ffffff',
-          border: 'none', cursor: 'pointer',
-          boxShadow: '0 4px 16px rgba(26,86,219,0.35)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'transform 0.15s, box-shadow 0.15s',
-        }}
-      >
+      {/* FAB mobile */}
+      <button className="sv-fab" onClick={() => setMobileSidebarOpen(true)} aria-label="Lista"
+        style={{ position: 'fixed', bottom: 24, left: 20, zIndex: 600, width: 52, height: 52, borderRadius: '50%', background: '#1A56DB', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,86,219,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.15s, box-shadow 0.15s' }}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="8"  y1="6"  x2="21" y2="6"/>
-          <line x1="8"  y1="12" x2="21" y2="12"/>
-          <line x1="8"  y1="18" x2="21" y2="18"/>
-          <line x1="3"  y1="6"  x2="3.01" y2="6"/>
-          <line x1="3"  y1="12" x2="3.01" y2="12"/>
-          <line x1="3"  y1="18" x2="3.01" y2="18"/>
+          <line x1="8"  y1="6"  x2="21" y2="6"/><line x1="8"  y1="12" x2="21" y2="12"/>
+          <line x1="8"  y1="18" x2="21" y2="18"/><line x1="3"  y1="6"  x2="3.01" y2="6"/>
+          <line x1="3"  y1="12" x2="3.01" y2="12"/><line x1="3"  y1="18" x2="3.01" y2="18"/>
         </svg>
       </button>
 
-      {/* ════ MOBILE SIDEBAR OVERLAY ══════════════════════════════════════ */}
-      <div
-        className={`sv-mobile-sidebar-overlay${mobileSidebarOpen ? ' open' : ''}`}
-        onClick={() => setMobileSidebarOpen(false)}
-      />
-
-      {/* ════ MOBILE SIDEBAR (desliza da esquerda, 75%) ══════════════════ */}
-      <div className={`sv-mobile-sidebar${mobileSidebarOpen ? ' open' : ''}`}>
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 16px', borderBottom: '1px solid #e5e7eb', flexShrink: 0,
-        }}>
+      {/* Mobile sidebar overlay + sidebar */}
+      <div className={`sv-mobile-sidebar-overlay${mobileSidebarOpen?' open':''}`} onClick={() => setMobileSidebarOpen(false)} />
+      <div className={`sv-mobile-sidebar${mobileSidebarOpen?' open':''}`}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
           <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 500, color: '#111827' }}>
             Street<span style={{ color: '#1A56DB' }}>Viz</span>
             <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 8 }}>· lista</span>
           </div>
-          <button
-            onClick={() => setMobileSidebarOpen(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 24, lineHeight: 1, padding: '0 2px' }}
-          >×</button>
+          <button onClick={() => setMobileSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 24, lineHeight: 1, padding: '0 2px' }}>×</button>
         </div>
         {SidebarContent}
       </div>
 
-      {/* ════ MOBILE BOTTOM SHEET (formulário) ═══════════════════════════ */}
+      {/* Mobile bottom sheet */}
       {formMode && (
         <>
-          <div className="sv-mobile-sheet-overlay" onClick={closeForm} style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(0,0,0,0.35)',
-            animation: 'fadeIn 0.2s ease',
-          }} />
-          <div className="sv-mobile-bottom-sheet" style={{
-            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 600,
-            background: '#ffffff',
-            borderRadius: '18px 18px 0 0',
-            boxShadow: '0 -4px 32px rgba(0,0,0,0.15)',
-            padding: '16px 18px 32px',
-            display: 'flex', flexDirection: 'column', gap: 13,
-            maxHeight: '92vh', overflowY: 'auto',
-            animation: 'sheetUp 0.28s cubic-bezier(0.32,0.72,0,1)',
-          }}>
+          <div className="sv-mobile-sheet-overlay" onClick={closeForm} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.35)', animation: 'fadeIn 0.2s ease' }} />
+          <div className="sv-mobile-bottom-sheet" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 600, background: '#ffffff', borderRadius: '18px 18px 0 0', boxShadow: '0 -4px 32px rgba(0,0,0,0.15)', padding: '16px 18px 32px', display: 'flex', flexDirection: 'column', gap: 13, maxHeight: '92vh', overflowY: 'auto', animation: 'sheetUp 0.28s cubic-bezier(0.32,0.72,0,1)' }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e5e7eb', margin: '-4px auto 4px' }} />
             {FormContent}
           </div>
         </>
       )}
 
-      {/* ════ MODAL ESTATÍSTICAS ══════════════════════════════════════════ */}
+      {/* Modal estatísticas */}
       {showStats && (
-        <div onClick={e => e.target===e.currentTarget && setShowStats(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 800, background: 'rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.15s ease', padding: 16 }}>
+        <div onClick={e => e.target===e.currentTarget&&setShowStats(false)} style={{ position: 'fixed', inset: 0, zIndex: 800, background: 'rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.15s ease', padding: 16 }}>
           <div style={{ background: '#ffffff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 28, width: '100%', maxWidth: 500, animation: 'fadeUp 0.2s ease', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ fontSize: 17, fontWeight: 500, color: '#111827' }}>{t.statsTitle}</div>
@@ -1057,7 +1167,7 @@ export default function DashboardPage() {
                 [3,t.sevHigh,'#DC2626'],[2,t.sevMed,'#D97706'],[1,t.sevLow,'#059669'],
               ] as [number,string,string][]).map(([g,label,color]) => {
                 const count = problems.filter(p=>p.gravidade===g).length
-                const pct   = problems.length ? Math.round(count/problems.length*100) : 0
+                const pct   = problems.length?Math.round(count/problems.length*100):0
                 return (
                   <div key={g} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                     <div style={{ width:44, fontSize:13, color:'#6b7280', fontFamily:body, flexShrink:0 }}>{label}</div>
@@ -1069,9 +1179,7 @@ export default function DashboardPage() {
                 )
               })}
             </div>
-            <button onClick={() => setShowStats(false)} style={{ width:'100%', marginTop:10, padding:'11px 0', fontFamily:body, fontSize:14, border:'1px solid #e5e7eb', borderRadius:10, background:'#ffffff', color:'#6b7280', cursor:'pointer' }}>
-              {t.statsClose}
-            </button>
+            <button onClick={() => setShowStats(false)} style={{ width:'100%', marginTop:10, padding:'11px 0', fontFamily:body, fontSize:14, border:'1px solid #e5e7eb', borderRadius:10, background:'#ffffff', color:'#6b7280', cursor:'pointer' }}>{t.statsClose}</button>
           </div>
         </div>
       )}
