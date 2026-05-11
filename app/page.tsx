@@ -9,7 +9,7 @@ export default function Home() {
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 text-gray-900 relative">
 
       {/* LOGO CLICK → HOME */}
       <div className="absolute top-6 left-6 z-50">
@@ -25,12 +25,12 @@ export default function Home() {
       {/* HERO */}
       <section className="text-center py-24 px-6">
 
-        <h1 className="text-5xl font-bold mb-6">
+        <h1 className="text-5xl font-bold text-gray-900 mb-6">
           StreetViz
         </h1>
 
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-          Uma nova forma de colaborar com a tua cidade.  
+          Uma nova forma de colaborar com a tua cidade.
           Vê, partilha e melhora a tua vizinhança com informação em tempo real.
         </p>
 
@@ -45,7 +45,7 @@ export default function Home() {
 
           <button
             onClick={() => router.push("/login")}
-            className="bg-white border px-6 py-3 rounded-xl hover:bg-gray-100 transition"
+            className="bg-white border border-gray-300 text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-100 transition"
           >
             Entrar
           </button>
@@ -64,14 +64,14 @@ export default function Home() {
       {/* COMO FUNCIONA */}
       <section className="py-20 px-6 bg-white">
 
-        <h2 className="text-3xl font-bold text-center mb-12">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Como funciona
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
 
           <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">
+            <h3 className="font-semibold text-lg text-gray-900 mb-2">
               1. Explora o mapa
             </h3>
             <p className="text-gray-600">
@@ -80,7 +80,7 @@ export default function Home() {
           </div>
 
           <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">
+            <h3 className="font-semibold text-lg text-gray-900 mb-2">
               2. Contribui
             </h3>
             <p className="text-gray-600">
@@ -89,7 +89,7 @@ export default function Home() {
           </div>
 
           <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">
+            <h3 className="font-semibold text-lg text-gray-900 mb-2">
               3. Melhora a cidade
             </h3>
             <p className="text-gray-600">
@@ -104,14 +104,14 @@ export default function Home() {
       {/* BENEFÍCIOS */}
       <section className="py-20 px-6">
 
-        <h2 className="text-3xl font-bold text-center mb-12">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Porquê usar StreetViz?
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
 
           <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">
+            <h3 className="font-semibold text-gray-900 mb-2">
               Comunidade ativa
             </h3>
             <p className="text-gray-600">
@@ -120,7 +120,7 @@ export default function Home() {
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">
+            <h3 className="font-semibold text-gray-900 mb-2">
               Informação visual
             </h3>
             <p className="text-gray-600">
@@ -129,7 +129,7 @@ export default function Home() {
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">
+            <h3 className="font-semibold text-gray-900 mb-2">
               Impacto real
             </h3>
             <p className="text-gray-600">
@@ -156,14 +156,14 @@ export default function Home() {
 
           <button
             onClick={() => router.push("/register")}
-            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold"
+            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"
           >
             Criar conta
           </button>
 
           <button
             onClick={() => router.push("/dashboard")}
-            className="bg-blue-800 px-6 py-3 rounded-xl font-semibold hover:bg-blue-900"
+            className="bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-900 transition"
           >
             Ver o mapa
           </button>

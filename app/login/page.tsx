@@ -8,8 +8,8 @@ import Link from "next/link";
 export default function LoginPage() {
 
   const router = useRouter();
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const login = async () => {
 
@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 text-gray-900 relative">
 
       {/* LOGO CLICK → HOME */}
       <div className="absolute top-6 left-6 z-50">
@@ -40,7 +40,7 @@ export default function LoginPage() {
 
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
 
-        <h1 className="text-3xl font-bold text-center mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
           StreetViz
         </h1>
 
@@ -53,15 +53,15 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e)=>setEmail(e.target.value)}
+            className="w-full p-3 border border-gray-300 text-gray-900 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e)=>setPassword(e.target.value)}
+            className="w-full p-3 border border-gray-300 text-gray-900 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <button
@@ -76,7 +76,10 @@ export default function LoginPage() {
         <p className="text-center text-sm text-gray-500 mt-6">
 
           Ainda não fazes parte da vizinhança?
-          <a href="/register" className="text-blue-600 ml-1">
+          <a
+            href="/register"
+            className="text-blue-600 font-medium ml-1 hover:underline"
+          >
             Criar conta
           </a>
 
@@ -85,5 +88,6 @@ export default function LoginPage() {
       </div>
 
     </div>
+
   );
 }
