@@ -1451,7 +1451,7 @@ export default function DashboardPage() {
   )
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ICON BAR (shared between desktop detail bar and mobile)
+  // ICON BAR
   // ─────────────────────────────────────────────────────────────────────────
   const IconBar = (
     <div style={{
@@ -1464,7 +1464,6 @@ export default function DashboardPage() {
       padding:       '5px',
       boxShadow:     DS.shadowMd,
     }}>
-      {/* Notifications */}
       <button
         className="sv-icon-btn"
         onClick={() => setRightPanel(p => p === 'notif' ? null : 'notif')}
@@ -1481,11 +1480,7 @@ export default function DashboardPage() {
           </span>
         )}
       </button>
-
-      {/* Divider */}
       <div style={{ height: 1, background: DS.borderLight, margin: '0 3px' }} />
-
-      {/* Profile */}
       <button
         className="sv-icon-btn"
         onClick={() => setRightPanel(p => p === 'profile' ? null : 'profile')}
@@ -1500,11 +1495,10 @@ export default function DashboardPage() {
   )
 
   // ─────────────────────────────────────────────────────────────────────────
-  // RIGHT PANEL BODY (shared)
+  // RIGHT PANEL BODY
   // ─────────────────────────────────────────────────────────────────────────
   const RightPanelBody = (
     <div style={{ flex: 1, overflowY: 'auto' }}>
-      {/* ── Notifications ── */}
       {rightPanel === 'notif' && (
         <>
           {unreadCount > 0 && (
@@ -1535,7 +1529,6 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* ── Profile ── */}
       {rightPanel === 'profile' && (
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px', background: DS.bg, borderRadius: DS.rMd, border: `1px solid ${DS.borderLight}` }}>
@@ -1614,7 +1607,6 @@ export default function DashboardPage() {
         .sv-kpi-card:hover { transform: translateY(-2px); box-shadow: ${DS.shadowMd}; }
         .sv-icon-btn:hover { background: ${DS.borderLight} !important; }
 
-        /* FAB */
         .sv-fab {
           transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
           animation: sv-fabPulse 3s ease-in-out infinite;
@@ -1622,7 +1614,6 @@ export default function DashboardPage() {
         .sv-fab:hover  { transform: scale(1.08) translateY(-2px) !important; animation: none; box-shadow: 0 8px 28px rgba(26,86,219,0.45) !important; }
         .sv-fab:active { transform: scale(0.94) !important; }
 
-        /* Mobile sidebar drawer */
         .sv-mobile-sidebar {
           position: fixed; top: 0; left: 0; bottom: 0;
           width: 82%; max-width: 340px;
@@ -1642,14 +1633,14 @@ export default function DashboardPage() {
           .sv-logo-sub         { display: none !important; }
           .sv-sidebar-desktop  { display: none !important; }
           .sv-sidebar-toggle   { display: none !important; }
-          .sv-body             { flex-direction: column !important; }
+          /* KEY FIX: ensure body fills height and columns have correct sizing */
+          .sv-body             { flex-direction: column !important; height: 100% !important; min-height: 0 !important; }
+          .sv-main             { height: 100% !important; min-height: 0 !important; }
+          .sv-dashboard-wrap   { min-height: 0 !important; height: 100% !important; }
           .sv-right-desktop    { display: none !important; }
           .sv-desktop-drawer   { display: none !important; }
-          /* Show mobile-only elements */
           .sv-mobile-topright  { display: flex !important; }
-          /* Panels visible on mobile */
           .sv-main-panels      { display: flex !important; }
-          /* Detail bar always shown on mobile dashboard */
           .sv-detail-bar       { display: block !important; }
         }
         @media (min-width: 769px) {
@@ -1674,8 +1665,6 @@ export default function DashboardPage() {
 
       {/* TOP BAR */}
       <div className="sv-topbar" style={{ display: 'flex', alignItems: 'center', padding: '0 20px', height: 56, background: DS.surface, borderBottom: `1px solid ${DS.border}`, flexShrink: 0, gap: 10, zIndex: 50, boxShadow: DS.shadowSm }}>
-
-        {/* Logo */}
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
           <div style={{ width: 34, height: 34, borderRadius: DS.rSm, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: DS.bg, border: `1px solid ${DS.border}` }}>
             <img src="/logo.png" style={{ height: 34, display: 'block' }} alt="StreetViz"
@@ -1697,7 +1686,6 @@ export default function DashboardPage() {
           </div>
         </a>
 
-        {/* Nav pill — centered on desktop, inline after logo on mobile */}
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rMd, padding: 3 }}>
             {([['dashboard', t.navDashboard], ['analytics', t.navAnalytics], ['reports', t.navReports]] as [ActiveNav, string][]).map(([k, label]) => (
@@ -1706,7 +1694,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Desktop right */}
         <div className="sv-right-desktop" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rSm, padding: 2 }}>
             {(['pt', 'en'] as Lang[]).map(l => (
@@ -1722,7 +1709,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Mobile right — lang toggle only (nav pill is already in center) */}
         <div className="sv-mobile-topright" style={{ display: 'none', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rSm, padding: 2 }}>
             {(['pt', 'en'] as Lang[]).map(l => (
@@ -1735,32 +1721,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* BODY */}
+      {/* BODY — KEY FIX: added minHeight: 0 */}
       <div className="sv-body" style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
 
-        {/* Sidebar collapse toggle (desktop only) */}
         <button className="sv-sidebar-toggle" onClick={() => setSidebarCollapsed(p => !p)} style={{ position: 'absolute', left: sidebarCollapsed ? 8 : 372, top: '50%', transform: 'translateY(-50%)', zIndex: 300, width: 20, height: 44, background: DS.surface, border: `1px solid ${DS.border}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.textMuted, boxShadow: DS.shadowSm, transition: 'left 0.24s ease', flexShrink: 0 }}>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ transform: sidebarCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.24s ease' }}>
             <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
 
-        {/* Desktop sidebar */}
         <div className="sv-sidebar-desktop" style={{ width: sidebarCollapsed ? 0 : 380, flexShrink: 0, background: DS.surface, borderRight: `1px solid ${DS.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'width 0.24s ease' }}>
           {!sidebarCollapsed && SidebarContent}
         </div>
 
-        {/* Main content area */}
-        <div className="sv-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        {/* Main content — KEY FIX: minHeight: 0 added */}
+        <div className="sv-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
 
-          {/* Analytics — visible on both desktop and mobile */}
           {activeNav === 'analytics' && (
             <div className="sv-main-panels" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: DS.bg, animation: 'sv-fadeIn 0.2s ease' }}>
               {AnalyticsPanel}
             </div>
           )}
 
-          {/* Reports — visible on both desktop and mobile */}
           {activeNav === 'reports' && (
             <div className="sv-main-panels" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: DS.bg, animation: 'sv-fadeIn 0.2s ease' }}>
               {ReportsPanel}
@@ -1768,7 +1750,8 @@ export default function DashboardPage() {
           )}
 
           {activeNav === 'dashboard' && (
-            <>
+            /* KEY FIX: wrapper with minHeight: 0 and explicit flex column fill */
+            <div className="sv-dashboard-wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
               {/* Subbar */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: DS.surface, borderBottom: `1px solid ${DS.border}`, flexShrink: 0 }}>
                 <div style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint, letterSpacing: '0.01em' }}>
@@ -1780,7 +1763,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Map */}
+              {/* Map — KEY FIX: flex: 1 with minHeight: 0 so it fills remaining space */}
               <div style={{ flex: 1, overflow: 'hidden', position: 'relative', minHeight: 0 }}>
                 <LeafletMapWrapper
                   problems={filtered}
@@ -1790,21 +1773,18 @@ export default function DashboardPage() {
                 />
               </div>
 
-              {/* ── Detail bar — desktop and mobile ── */}
+              {/* Detail bar */}
               <div className="sv-detail-bar" style={{ position: 'relative', flexShrink: 0, background: DS.surface, borderTop: `1px solid ${DS.border}` }}>
-
-                {/* Floating icon bar */}
                 <div style={{
-                  position:      'absolute',
-                  right:         12,
-                  top:           rightPanel ? 14 : '50%',
-                  transform:     rightPanel ? 'none' : 'translateY(-50%)',
-                  zIndex:        10,
+                  position:  'absolute',
+                  right:     12,
+                  top:       rightPanel ? 14 : '50%',
+                  transform: rightPanel ? 'none' : 'translateY(-50%)',
+                  zIndex:    10,
                 }}>
                   {IconBar}
                 </div>
 
-                {/* Right panel (notif / profile) */}
                 {rightPanel && (
                   <div style={{ animation: 'sv-panelUp 0.2s ease', display: 'flex', flexDirection: 'column', maxHeight: 420, overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderBottom: `1px solid ${DS.borderLight}`, flexShrink: 0 }}>
@@ -1817,7 +1797,6 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Detail content */}
                 {!rightPanel && (
                   <div style={{ minHeight: 80, padding: '12px 60px 12px 18px', overflowY: 'auto' }}>
                     {!selected ? (
@@ -1864,7 +1843,7 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
 
           {/* Desktop form drawer */}
@@ -1876,38 +1855,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── FAB (mobile) — improved design ── */}
+      {/* FAB */}
       <button
         className="sv-fab"
         onClick={() => setMobileSidebarOpen(true)}
         aria-label="Abrir lista"
         style={{
-          position:     'fixed',
-          bottom:       24,
-          right:        20,
-          zIndex:       600,
-          width:        56,
-          height:       56,
-          borderRadius: '16px',
-          background:   `linear-gradient(135deg, ${DS.blue} 0%, ${DS.blueDark} 100%)`,
-          color:        '#ffffff',
-          border:       'none',
-          cursor:       'pointer',
-          boxShadow:    `0 4px 18px rgba(26,86,219,0.35)`,
-          display:      'flex',
-          alignItems:   'center',
-          justifyContent: 'center',
+          position:      'fixed',
+          bottom:        24,
+          right:         20,
+          zIndex:        600,
+          width:         56,
+          height:        56,
+          borderRadius:  '16px',
+          background:    `linear-gradient(135deg, ${DS.blue} 0%, ${DS.blueDark} 100%)`,
+          color:         '#ffffff',
+          border:        'none',
+          cursor:        'pointer',
+          boxShadow:     `0 4px 18px rgba(26,86,219,0.35)`,
+          display:       'flex',
+          alignItems:    'center',
+          justifyContent:'center',
           flexDirection: 'column',
-          gap:          2,
+          gap:           2,
         }}
       >
-        {/* Hamburger lines — refined */}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="4" y1="7"  x2="20" y2="7"/>
           <line x1="4" y1="12" x2="20" y2="12"/>
           <line x1="4" y1="17" x2="14" y2="17"/>
         </svg>
-        {/* Count badge */}
         {filtered.length > 0 && (
           <span style={{ position: 'absolute', top: -4, left: -4, minWidth: 18, height: 18, borderRadius: 9, background: DS.red, border: `2px solid ${DS.surface}`, fontSize: 9, fontFamily: DS.mono, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
             {filtered.length > 99 ? '99+' : filtered.length}
@@ -1930,12 +1907,10 @@ export default function DashboardPage() {
         {SidebarContent}
       </div>
 
-      {/* Mobile right panel — notif / profile — full-screen bottom sheet */}
+      {/* Mobile right panel */}
       {rightPanel && (
         <div className="sv-mobile-right-panel" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 800, background: DS.surface, borderRadius: '16px 16px 0 0', boxShadow: `0 -4px 28px rgba(0,0,0,0.14)`, display: 'flex', flexDirection: 'column', maxHeight: '82vh', animation: 'sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1)' }}>
-          {/* Handle */}
           <div style={{ width: 32, height: 3, borderRadius: 2, background: DS.border, margin: '10px auto 0' }} />
-          {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 10px', borderBottom: `1px solid ${DS.borderLight}`, flexShrink: 0 }}>
             <span style={{ fontFamily: DS.mono, fontSize: 13, fontWeight: 500, color: DS.text }}>
               {rightPanel === 'notif' ? t.notifTitle : currentUserName ?? 'Perfil'}
