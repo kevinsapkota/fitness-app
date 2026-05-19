@@ -665,6 +665,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const unreadCount = notifications.filter(n => !n.read).length
 
+  // ── NEW: right panel state (replaces showNotifications + showProfileMenu) ──
   const [rightPanel, setRightPanel] = useState<RightPanel>(null)
 
   const [formMode,          setFormMode]         = useState<FormMode>(null)
@@ -1078,7 +1079,7 @@ export default function DashboardPage() {
         <p style={{ fontFamily: DS.body, fontSize: 12, color: DS.textMuted, margin: '4px 0 0', letterSpacing: '-0.01em' }}>{t.analyticsDesc}</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         {[
           { label: t.statTotal,      value: problems.length,                                           color: DS.blue,  bg: DS.blueLight,  trend: 12 },
           { label: t.statConf,       value: problems.reduce((a, p) => a + p.confirmacoes, 0),          color: DS.green, bg: DS.greenLight, trend: 8  },
@@ -1451,123 +1452,6 @@ export default function DashboardPage() {
   )
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ICON BAR
-  // ─────────────────────────────────────────────────────────────────────────
-  const IconBar = (
-    <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      gap:           3,
-      background:    DS.surface,
-      border:        `1px solid ${DS.border}`,
-      borderRadius:  DS.rMd,
-      padding:       '5px',
-      boxShadow:     DS.shadowMd,
-    }}>
-      <button
-        className="sv-icon-btn"
-        onClick={() => setRightPanel(p => p === 'notif' ? null : 'notif')}
-        title={t.notifTitle}
-        style={{ position: 'relative', width: 32, height: 32, borderRadius: DS.rSm, border: 'none', background: rightPanel === 'notif' ? DS.blueLight : 'transparent', color: rightPanel === 'notif' ? DS.blue : DS.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: DS.transFast }}
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        {unreadCount > 0 && (
-          <span style={{ position: 'absolute', top: 3, right: 3, width: 14, height: 14, borderRadius: '50%', background: DS.red, border: `2px solid ${DS.surface}`, fontSize: 7, fontFamily: DS.mono, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'sv-bounce 0.4s ease' }}>
-            {unreadCount}
-          </span>
-        )}
-      </button>
-      <div style={{ height: 1, background: DS.borderLight, margin: '0 3px' }} />
-      <button
-        className="sv-icon-btn"
-        onClick={() => setRightPanel(p => p === 'profile' ? null : 'profile')}
-        title={currentUserName ?? 'Perfil'}
-        style={{ width: 32, height: 32, borderRadius: DS.rSm, border: 'none', background: rightPanel === 'profile' ? DS.blueLight : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: DS.transFast }}
-      >
-        <div style={{ width: 22, height: 22, borderRadius: '50%', background: DS.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, fontFamily: DS.mono }}>
-          {currentUserName?.charAt(0).toUpperCase() ?? '?'}
-        </div>
-      </button>
-    </div>
-  )
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // RIGHT PANEL BODY
-  // ─────────────────────────────────────────────────────────────────────────
-  const RightPanelBody = (
-    <div style={{ flex: 1, overflowY: 'auto' }}>
-      {rightPanel === 'notif' && (
-        <>
-          {unreadCount > 0 && (
-            <div style={{ padding: '9px 16px', borderBottom: `1px solid ${DS.borderLight}` }}>
-              <button onClick={markAllRead} style={{ fontFamily: DS.body, fontSize: 12, color: DS.blue, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t.notifMarkAll}</button>
-            </div>
-          )}
-          {notifications.length === 0 ? (
-            <div style={{ padding: '28px 16px', textAlign: 'center', fontSize: 13, color: DS.textMuted, fontFamily: DS.body }}>{t.notifEmpty}</div>
-          ) : notifications.map((n, i) => (
-            <div key={n.id} onClick={() => markRead(n.id)} style={{ padding: '11px 16px', borderBottom: i < notifications.length - 1 ? `1px solid ${DS.borderLight}` : 'none', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start', background: n.read ? DS.surface : DS.blueLight, transition: DS.transFast }}
-              onMouseEnter={e => (e.currentTarget.style.background = DS.bg)}
-              onMouseLeave={e => (e.currentTarget.style.background = n.read ? DS.surface : DS.blueLight)}
-            >
-              <span style={{ width: 20, height: 20, borderRadius: '50%', background: n.type === 'new' ? DS.blueLight : DS.greenLight, border: `1px solid ${n.type === 'new' ? DS.blueBorder : DS.greenBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke={n.type === 'new' ? DS.blue : DS.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  {n.type === 'new' ? <><circle cx="8" cy="7" r="3"/><path d="M8 2C5.24 2 3 4.24 3 7c0 4 5 8 5 8s5-4 5-8c0-2.76-2.24-5-5-5z"/></> : <path d="M2 8l4 4 8-8"/>}
-                </svg>
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: DS.text, marginBottom: 2, letterSpacing: '-0.01em' }}>{n.title}</div>
-                <div style={{ fontSize: 11, color: DS.textSub, lineHeight: 1.45 }}>{n.message}</div>
-                <div style={{ fontSize: 10, color: DS.textFaint, fontFamily: DS.mono, marginTop: 3 }}>{timeAgo(n.time, lang)}</div>
-              </div>
-              {!n.read && <span style={{ width: 6, height: 6, borderRadius: '50%', background: DS.blue, flexShrink: 0, marginTop: 4 }} />}
-            </div>
-          ))}
-        </>
-      )}
-
-      {rightPanel === 'profile' && (
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px', background: DS.bg, borderRadius: DS.rMd, border: `1px solid ${DS.borderLight}` }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: DS.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, fontFamily: DS.mono, flexShrink: 0 }}>
-              {currentUserName?.charAt(0).toUpperCase() ?? '?'}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: DS.text, letterSpacing: '-0.01em' }}>{currentUserName ?? 'Utilizador'}</div>
-              <div style={{ fontSize: 11, color: DS.textMuted, fontFamily: DS.mono, marginTop: 1 }}>{currentUserEmail ?? ''}</div>
-            </div>
-            <div style={{ fontFamily: DS.mono, fontSize: 11, fontWeight: 500, color: DS.blue, background: DS.blueLight, border: `1px solid ${DS.blueBorder}`, borderRadius: 6, padding: '2px 8px', flexShrink: 0 }}>
-              {problems.filter(p => p.user_id === currentUserId).length} {t.subProblems}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {[
-              { label: t.myReports,    svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', action: () => { setViewMode('meus'); setRightPanel(null) } },
-              { label: t.statsTitle,   svgPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', action: () => { setShowStats(true); setRightPanel(null) } },
-              { label: t.navAnalytics, svgPath: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16', action: () => { setActiveNav('analytics'); setRightPanel(null) } },
-              { label: t.navReports,   svgPath: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8', action: () => { setActiveNav('reports'); setRightPanel(null) } },
-            ].map(item => (
-              <button key={item.label} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 10px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: DS.body, fontSize: 13, color: DS.textSub, borderRadius: DS.rSm, transition: DS.transFast, textAlign: 'left', letterSpacing: '-0.01em' }} onMouseEnter={e => (e.currentTarget.style.background = DS.bg)} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={item.svgPath}/></svg>
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 10px', background: 'none', border: `1px solid ${DS.redBorder}`, cursor: 'pointer', fontFamily: DS.body, fontSize: 13, color: DS.red, borderRadius: DS.rSm, transition: DS.transFast, letterSpacing: '-0.01em' }} onMouseEnter={e => (e.currentTarget.style.background = DS.redLight)} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-            {t.profileSignOut}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-
-  // ─────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -1592,7 +1476,6 @@ export default function DashboardPage() {
         @keyframes sv-notifPop { from{opacity:0;transform:translateY(-8px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes sv-bounce   { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
         @keyframes sv-panelUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes sv-fabPulse { 0%,100%{box-shadow:0 4px 18px rgba(26,86,219,0.35)} 50%{box-shadow:0 4px 28px rgba(26,86,219,0.55)} }
 
         .sv-card { transition: border-color 0.18s, background 0.18s, transform 0.18s, box-shadow 0.18s; }
         .sv-card:hover { box-shadow: 0 2px 14px rgba(0,0,0,0.06) !important; }
@@ -1607,16 +1490,9 @@ export default function DashboardPage() {
         .sv-kpi-card:hover { transform: translateY(-2px); box-shadow: ${DS.shadowMd}; }
         .sv-icon-btn:hover { background: ${DS.borderLight} !important; }
 
-        .sv-fab {
-          transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
-          animation: sv-fabPulse 3s ease-in-out infinite;
-        }
-        .sv-fab:hover  { transform: scale(1.08) translateY(-2px) !important; animation: none; box-shadow: 0 8px 28px rgba(26,86,219,0.45) !important; }
-        .sv-fab:active { transform: scale(0.94) !important; }
-
         .sv-mobile-sidebar {
           position: fixed; top: 0; left: 0; bottom: 0;
-          width: 82%; max-width: 340px;
+          width: 78%; max-width: 340px;
           background: ${DS.surface}; z-index: 700;
           display: flex; flex-direction: column; overflow: hidden;
           box-shadow: 4px 0 28px rgba(0,0,0,0.12);
@@ -1626,32 +1502,32 @@ export default function DashboardPage() {
         .sv-mobile-sidebar.open { transform: translateX(0); }
         .sv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.28); z-index: 699; opacity: 0; pointer-events: none; transition: opacity 0.22s ease; }
         .sv-overlay.open { opacity: 1; pointer-events: all; }
+        .sv-fab { transition: transform 0.15s, box-shadow 0.15s; }
+        .sv-fab:hover  { transform: scale(1.06) !important; }
+        .sv-fab:active { transform: scale(0.95) !important; }
 
-        /* ── MOBILE RESPONSIVE ── */
         @media (max-width: 768px) {
-          .sv-topbar           { padding: 0 12px !important; height: 50px !important; }
+          .sv-topbar           { padding: 0 14px !important; height: 50px !important; }
+          .sv-nav-center       { display: none !important; }
+          .sv-right-desktop    { display: none !important; }
           .sv-logo-sub         { display: none !important; }
           .sv-sidebar-desktop  { display: none !important; }
           .sv-sidebar-toggle   { display: none !important; }
-          /* KEY FIX: ensure body fills height and columns have correct sizing */
-          .sv-body             { flex-direction: column !important; height: 100% !important; min-height: 0 !important; }
-          .sv-main             { height: 100% !important; min-height: 0 !important; }
-          .sv-dashboard-wrap   { min-height: 0 !important; height: 100% !important; }
-          .sv-right-desktop    { display: none !important; }
+          .sv-body             { flex-direction: column !important; }
+          .sv-detail-bar       { display: none !important; }
+          .sv-sort-row         { display: none !important; }
+          .sv-stat-num         { font-size: 17px !important; }
+          .sv-stat-cell        { padding: 9px 8px 7px !important; }
           .sv-desktop-drawer   { display: none !important; }
-          .sv-mobile-topright  { display: flex !important; }
-          .sv-main-panels      { display: flex !important; }
-          .sv-detail-bar       { display: block !important; }
+          .sv-main-panels      { display: none !important; }
         }
         @media (min-width: 769px) {
           .sv-mobile-new-btn       { display: none !important; }
-          .sv-mobile-topright      { display: none !important; }
           .sv-mobile-sheet-overlay { display: none !important; }
           .sv-mobile-bottom-sheet  { display: none !important; }
           .sv-mobile-sidebar       { display: none !important; }
           .sv-overlay              { display: none !important; }
           .sv-fab                  { display: none !important; }
-          .sv-mobile-right-panel   { display: none !important; }
         }
       `}</style>
 
@@ -1664,10 +1540,12 @@ export default function DashboardPage() {
       )}
 
       {/* TOP BAR */}
-      <div className="sv-topbar" style={{ display: 'flex', alignItems: 'center', padding: '0 20px', height: 56, background: DS.surface, borderBottom: `1px solid ${DS.border}`, flexShrink: 0, gap: 10, zIndex: 50, boxShadow: DS.shadowSm }}>
+      <div className="sv-topbar" style={{ display: 'flex', alignItems: 'center', padding: '0 20px', height: 56, background: DS.surface, borderBottom: `1px solid ${DS.border}`, flexShrink: 0, gap: 12, zIndex: 50, boxShadow: DS.shadowSm }}>
+
+        {/* Logo */}
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, textDecoration: 'none' }}>
-          <div style={{ width: 34, height: 34, borderRadius: DS.rSm, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: DS.bg, border: `1px solid ${DS.border}` }}>
-            <img src="/logo.png" style={{ height: 34, display: 'block' }} alt="StreetViz"
+          <div style={{ width: 36, height: 36, borderRadius: DS.rSm, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: DS.bg, border: `1px solid ${DS.border}` }}>
+            <img src="/logo.png" style={{ height: 36, display: 'block' }} alt="StreetViz"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = 'none'
                 const p = e.currentTarget.parentElement
@@ -1686,15 +1564,17 @@ export default function DashboardPage() {
           </div>
         </a>
 
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+        {/* Nav center */}
+        <div className="sv-nav-center" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rMd, padding: 3 }}>
             {([['dashboard', t.navDashboard], ['analytics', t.navAnalytics], ['reports', t.navReports]] as [ActiveNav, string][]).map(([k, label]) => (
-              <button key={k} className="sv-topbar-nav" onClick={() => setActiveNav(k)} style={{ fontFamily: DS.body, fontSize: 13, fontWeight: 400, padding: '5px 14px', border: 'none', borderRadius: DS.rSm, cursor: 'pointer', background: activeNav === k ? DS.blue : 'transparent', color: activeNav === k ? '#ffffff' : DS.textSub, transition: DS.transFast, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{label}</button>
+              <button key={k} className="sv-topbar-nav" onClick={() => setActiveNav(k)} style={{ fontFamily: DS.body, fontSize: 13, fontWeight: 400, padding: '5px 18px', border: 'none', borderRadius: DS.rSm, cursor: 'pointer', background: activeNav === k ? DS.blue : 'transparent', color: activeNav === k ? '#ffffff' : DS.textSub, transition: DS.transFast, letterSpacing: '-0.01em' }}>{label}</button>
             ))}
           </div>
         </div>
 
-        <div className="sv-right-desktop" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Right — lang + system badge + new problem (NO notif/profile here anymore) */}
+        <div className="sv-right-desktop" style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rSm, padding: 2 }}>
             {(['pt', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)} style={{ fontFamily: DS.mono, fontSize: 10, padding: '3px 8px', border: 'none', borderRadius: 5, cursor: 'pointer', background: lang === l ? DS.surface : 'transparent', color: lang === l ? DS.text : DS.textMuted, fontWeight: lang === l ? 500 : 400, transition: DS.transFast, boxShadow: lang === l ? DS.shadowSm : 'none' }}>{l.toUpperCase()}</button>
@@ -1709,33 +1589,36 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        <div className="sv-mobile-topright" style={{ display: 'none', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {/* Mobile right */}
+        <div className="sv-mobile-new-btn" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
           <div style={{ display: 'flex', gap: 1, background: DS.bg, border: `1px solid ${DS.border}`, borderRadius: DS.rSm, padding: 2 }}>
             {(['pt', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)} style={{ fontFamily: DS.mono, fontSize: 9, padding: '2px 6px', border: 'none', borderRadius: 4, cursor: 'pointer', background: lang === l ? DS.surface : 'transparent', color: lang === l ? DS.text : DS.textMuted, fontWeight: lang === l ? 500 : 400 }}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <button onClick={openCreate} style={{ fontFamily: DS.body, fontSize: 12, fontWeight: 600, padding: '6px 12px', background: DS.blue, color: '#ffffff', border: 'none', borderRadius: DS.rSm, cursor: 'pointer', letterSpacing: '-0.01em', boxShadow: `0 2px 8px rgba(26,86,219,0.22)` }}>
-            +
+          <button onClick={openCreate} style={{ fontFamily: DS.body, fontSize: 12, fontWeight: 600, padding: '6px 12px', background: DS.blue, color: '#ffffff', border: 'none', borderRadius: DS.rSm, cursor: 'pointer', letterSpacing: '-0.01em' }}>
+            + {lang === 'pt' ? 'Novo' : 'New'}
           </button>
         </div>
       </div>
 
-      {/* BODY — KEY FIX: added minHeight: 0 */}
+      {/* BODY */}
       <div className="sv-body" style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
 
+        {/* Sidebar collapse toggle */}
         <button className="sv-sidebar-toggle" onClick={() => setSidebarCollapsed(p => !p)} style={{ position: 'absolute', left: sidebarCollapsed ? 8 : 372, top: '50%', transform: 'translateY(-50%)', zIndex: 300, width: 20, height: 44, background: DS.surface, border: `1px solid ${DS.border}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.textMuted, boxShadow: DS.shadowSm, transition: 'left 0.24s ease', flexShrink: 0 }}>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ transform: sidebarCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.24s ease' }}>
             <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
 
+        {/* Desktop sidebar */}
         <div className="sv-sidebar-desktop" style={{ width: sidebarCollapsed ? 0 : 380, flexShrink: 0, background: DS.surface, borderRight: `1px solid ${DS.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'width 0.24s ease' }}>
           {!sidebarCollapsed && SidebarContent}
         </div>
 
-        {/* Main content — KEY FIX: minHeight: 0 added */}
-        <div className="sv-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
+        {/* Main content area */}
+        <div className="sv-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
 
           {activeNav === 'analytics' && (
             <div className="sv-main-panels" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: DS.bg, animation: 'sv-fadeIn 0.2s ease' }}>
@@ -1750,8 +1633,7 @@ export default function DashboardPage() {
           )}
 
           {activeNav === 'dashboard' && (
-            /* KEY FIX: wrapper with minHeight: 0 and explicit flex column fill */
-            <div className="sv-dashboard-wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+            <>
               {/* Subbar */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: DS.surface, borderBottom: `1px solid ${DS.border}`, flexShrink: 0 }}>
                 <div style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint, letterSpacing: '0.01em' }}>
@@ -1763,7 +1645,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Map — KEY FIX: flex: 1 with minHeight: 0 so it fills remaining space */}
+              {/* Map */}
               <div style={{ flex: 1, overflow: 'hidden', position: 'relative', minHeight: 0 }}>
                 <LeafletMapWrapper
                   problems={filtered}
@@ -1773,51 +1655,171 @@ export default function DashboardPage() {
                 />
               </div>
 
-              {/* Detail bar */}
+              {/* ── Detail bar zone — contains icon bar + panel/detail ── */}
               <div className="sv-detail-bar" style={{ position: 'relative', flexShrink: 0, background: DS.surface, borderTop: `1px solid ${DS.border}` }}>
+
+                {/* Floating icon bar — vertically centred on the right edge */}
                 <div style={{
-                  position:  'absolute',
-                  right:     12,
-                  top:       rightPanel ? 14 : '50%',
-                  transform: rightPanel ? 'none' : 'translateY(-50%)',
-                  zIndex:    10,
+                  position:      'absolute',
+                  right:         12,
+                  top:           '50%',
+                  transform:     'translateY(-50%)',
+                  zIndex:        10,
+                  display:       'flex',
+                  flexDirection: 'column',
+                  gap:           3,
+                  background:    DS.surface,
+                  border:        `1px solid ${DS.border}`,
+                  borderRadius:  DS.rMd,
+                  padding:       '5px',
+                  boxShadow:     DS.shadowMd,
                 }}>
-                  {IconBar}
+                  {/* Notifications */}
+                  <button
+                    className="sv-icon-btn"
+                    onClick={() => setRightPanel(p => p === 'notif' ? null : 'notif')}
+                    title={t.notifTitle}
+                    style={{ position: 'relative', width: 32, height: 32, borderRadius: DS.rSm, border: 'none', background: rightPanel === 'notif' ? DS.blueLight : 'transparent', color: rightPanel === 'notif' ? DS.blue : DS.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: DS.transFast }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span style={{ position: 'absolute', top: 3, right: 3, width: 14, height: 14, borderRadius: '50%', background: DS.red, border: `2px solid ${DS.surface}`, fontSize: 7, fontFamily: DS.mono, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'sv-bounce 0.4s ease' }}>
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{ height: 1, background: DS.borderLight, margin: '0 3px' }} />
+
+                  {/* Profile */}
+                  <button
+                    className="sv-icon-btn"
+                    onClick={() => setRightPanel(p => p === 'profile' ? null : 'profile')}
+                    title={currentUserName ?? 'Perfil'}
+                    style={{ width: 32, height: 32, borderRadius: DS.rSm, border: 'none', background: rightPanel === 'profile' ? DS.blueLight : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: DS.transFast }}
+                  >
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: DS.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, fontFamily: DS.mono }}>
+                      {currentUserName?.charAt(0).toUpperCase() ?? '?'}
+                    </div>
+                  </button>
                 </div>
 
+                {/* Panel — slides up over detail bar area */}
                 {rightPanel && (
                   <div style={{ animation: 'sv-panelUp 0.2s ease', display: 'flex', flexDirection: 'column', maxHeight: 420, overflow: 'hidden' }}>
+
+                    {/* Panel header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderBottom: `1px solid ${DS.borderLight}`, flexShrink: 0 }}>
                       <span style={{ fontFamily: DS.mono, fontSize: 13, fontWeight: 500, color: DS.text }}>
                         {rightPanel === 'notif' ? t.notifTitle : currentUserName ?? 'Perfil'}
                       </span>
                       <button onClick={() => setRightPanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, fontSize: 20, lineHeight: 1, padding: '0 2px' }}>×</button>
                     </div>
-                    {RightPanelBody}
+
+                    {/* Panel body */}
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+
+                      {/* ── Notifications ── */}
+                      {rightPanel === 'notif' && (
+                        <>
+                          {unreadCount > 0 && (
+                            <div style={{ padding: '9px 16px', borderBottom: `1px solid ${DS.borderLight}` }}>
+                              <button onClick={markAllRead} style={{ fontFamily: DS.body, fontSize: 12, color: DS.blue, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t.notifMarkAll}</button>
+                            </div>
+                          )}
+                          {notifications.length === 0 ? (
+                            <div style={{ padding: '28px 16px', textAlign: 'center', fontSize: 13, color: DS.textMuted, fontFamily: DS.body }}>{t.notifEmpty}</div>
+                          ) : notifications.map((n, i) => (
+                            <div key={n.id} onClick={() => markRead(n.id)} style={{ padding: '11px 16px', borderBottom: i < notifications.length - 1 ? `1px solid ${DS.borderLight}` : 'none', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start', background: n.read ? DS.surface : DS.blueLight, transition: DS.transFast }}
+                              onMouseEnter={e => (e.currentTarget.style.background = DS.bg)}
+                              onMouseLeave={e => (e.currentTarget.style.background = n.read ? DS.surface : DS.blueLight)}
+                            >
+                              <span style={{ width: 20, height: 20, borderRadius: '50%', background: n.type === 'new' ? DS.blueLight : DS.greenLight, border: `1px solid ${n.type === 'new' ? DS.blueBorder : DS.greenBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                                <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke={n.type === 'new' ? DS.blue : DS.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                  {n.type === 'new' ? <><circle cx="8" cy="7" r="3"/><path d="M8 2C5.24 2 3 4.24 3 7c0 4 5 8 5 8s5-4 5-8c0-2.76-2.24-5-5-5z"/></> : <path d="M2 8l4 4 8-8"/>}
+                                </svg>
+                              </span>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 12, fontWeight: 500, color: DS.text, marginBottom: 2, letterSpacing: '-0.01em' }}>{n.title}</div>
+                                <div style={{ fontSize: 11, color: DS.textSub, lineHeight: 1.45 }}>{n.message}</div>
+                                <div style={{ fontSize: 10, color: DS.textFaint, fontFamily: DS.mono, marginTop: 3 }}>{timeAgo(n.time, lang)}</div>
+                              </div>
+                              {!n.read && <span style={{ width: 6, height: 6, borderRadius: '50%', background: DS.blue, flexShrink: 0, marginTop: 4 }} />}
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* ── Profile ── */}
+                      {rightPanel === 'profile' && (
+                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+                          {/* Avatar card */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px', background: DS.bg, borderRadius: DS.rMd, border: `1px solid ${DS.borderLight}` }}>
+                            <div style={{ width: 40, height: 40, borderRadius: '50%', background: DS.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, fontFamily: DS.mono, flexShrink: 0 }}>
+                              {currentUserName?.charAt(0).toUpperCase() ?? '?'}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: DS.text, letterSpacing: '-0.01em' }}>{currentUserName ?? 'Utilizador'}</div>
+                              <div style={{ fontSize: 11, color: DS.textMuted, fontFamily: DS.mono, marginTop: 1 }}>{currentUserEmail ?? ''}</div>
+                            </div>
+                            <div style={{ fontFamily: DS.mono, fontSize: 11, fontWeight: 500, color: DS.blue, background: DS.blueLight, border: `1px solid ${DS.blueBorder}`, borderRadius: 6, padding: '2px 8px', flexShrink: 0 }}>
+                              {problems.filter(p => p.user_id === currentUserId).length} {t.subProblems}
+                            </div>
+                          </div>
+
+                          {/* Menu items */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {[
+                              { label: t.myReports,    svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', action: () => { setViewMode('meus'); setRightPanel(null) } },
+                              { label: t.statsTitle,   svgPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', action: () => { setShowStats(true); setRightPanel(null) } },
+                              { label: t.navAnalytics, svgPath: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16', action: () => { setActiveNav('analytics'); setRightPanel(null) } },
+                              { label: t.navReports,   svgPath: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8', action: () => { setActiveNav('reports'); setRightPanel(null) } },
+                            ].map(item => (
+                              <button key={item.label} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 10px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: DS.body, fontSize: 13, color: DS.textSub, borderRadius: DS.rSm, transition: DS.transFast, textAlign: 'left', letterSpacing: '-0.01em' }} onMouseEnter={e => (e.currentTarget.style.background = DS.bg)} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={item.svgPath}/></svg>
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Sign out */}
+                          <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 10px', background: 'none', border: `1px solid ${DS.redBorder}`, cursor: 'pointer', fontFamily: DS.body, fontSize: 13, color: DS.red, borderRadius: DS.rSm, transition: DS.transFast, letterSpacing: '-0.01em' }} onMouseEnter={e => (e.currentTarget.style.background = DS.redLight)} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                            {t.profileSignOut}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
+                {/* Original detail content — shown only when no panel is open */}
                 {!rightPanel && (
-                  <div style={{ minHeight: 80, padding: '12px 60px 12px 18px', overflowY: 'auto' }}>
+                  <div style={{ height: 172, padding: '12px 18px', overflowY: 'auto' }}>
                     {!selected ? (
-                      <div style={{ display: 'flex', alignItems: 'center', height: 56, fontSize: 12, color: DS.textFaint, fontFamily: DS.mono, letterSpacing: '0.01em' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 12, color: DS.textFaint, fontFamily: DS.mono, letterSpacing: '0.01em' }}>
                         {t.selectHint}
                       </div>
                     ) : (
                       <div style={{ animation: 'sv-fadeUp 0.18s ease' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: selected.gravidade === 3 ? DS.red : selected.gravidade === 2 ? DS.amber : DS.green, display: 'inline-block', flexShrink: 0 }} />
-                          <div style={{ fontSize: 14, fontWeight: 500, color: DS.text, letterSpacing: '-0.01em' }}>{selected.name}</div>
+                          <div style={{ fontSize: 15, fontWeight: 500, color: DS.text, letterSpacing: '-0.01em' }}>{selected.name}</div>
                           <Badge label={catLabel(selected.categoria)} color={CAT_CFG[selected.categoria ?? 'outro'].color} bg={CAT_CFG[selected.categoria ?? 'outro'].bg} border={CAT_CFG[selected.categoria ?? 'outro'].border} />
                           <Badge label={statusLabel(selected.status)} color={STATUS_CFG[selected.status ?? 'ativo'].color} bg={STATUS_CFG[selected.status ?? 'ativo'].bg} border={STATUS_CFG[selected.status ?? 'ativo'].border} />
                         </div>
-                        <div style={{ fontSize: 12, color: DS.textSub, marginBottom: 8, lineHeight: 1.6, letterSpacing: '-0.005em' }}>{selected.description}</div>
+                        <div style={{ fontSize: 12, color: DS.textSub, marginBottom: 10, lineHeight: 1.6, letterSpacing: '-0.005em' }}>{selected.description}</div>
                         {selected.photo_urls && selected.photo_urls.length > 0 && (
                           <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
                             {selected.photo_urls.map((url, i) => <img key={i} src={url} alt="" onClick={() => window.open(url, '_blank')} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: DS.rSm, border: `1px solid ${DS.border}`, cursor: 'zoom-in' }} />)}
                           </div>
                         )}
-                        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', rowGap: 8 }}>
+                        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', rowGap: 8 }}>
                           {[
                             { label: t.detailLoc,  value: selected.location ?? '—' },
                             { label: t.detailConf, value: `${selected.confirmacoes} ${t.detailVotes}` },
@@ -1831,7 +1833,7 @@ export default function DashboardPage() {
                           <div>
                             <div style={{ fontSize: 9, letterSpacing: '0.07em', textTransform: 'uppercase', color: DS.textFaint, fontFamily: DS.mono, marginBottom: 5 }}>{t.detailScore}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                              <div style={{ width: 56, height: 3, background: DS.borderLight, borderRadius: 2, overflow: 'hidden' }}>
+                              <div style={{ width: 64, height: 3, background: DS.borderLight, borderRadius: 2, overflow: 'hidden' }}>
                                 <div style={{ width: `${getVibrancy(selected)}%`, height: '100%', background: DS.blue, borderRadius: 2 }} />
                               </div>
                               <span style={{ fontSize: 12, fontFamily: DS.mono, color: DS.textSub }}>{getVibrancy(selected)}/100</span>
@@ -1843,7 +1845,7 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
 
           {/* Desktop form drawer */}
@@ -1855,41 +1857,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* FAB */}
-      <button
-        className="sv-fab"
-        onClick={() => setMobileSidebarOpen(true)}
-        aria-label="Abrir lista"
-        style={{
-          position:      'fixed',
-          bottom:        24,
-          right:         20,
-          zIndex:        600,
-          width:         56,
-          height:        56,
-          borderRadius:  '16px',
-          background:    `linear-gradient(135deg, ${DS.blue} 0%, ${DS.blueDark} 100%)`,
-          color:         '#ffffff',
-          border:        'none',
-          cursor:        'pointer',
-          boxShadow:     `0 4px 18px rgba(26,86,219,0.35)`,
-          display:       'flex',
-          alignItems:    'center',
-          justifyContent:'center',
-          flexDirection: 'column',
-          gap:           2,
-        }}
-      >
+      {/* FAB (mobile) */}
+      <button className="sv-fab" onClick={() => setMobileSidebarOpen(true)} aria-label="Abrir lista" style={{ position: 'fixed', bottom: 22, right: 18, zIndex: 600, width: 52, height: 52, borderRadius: '50%', background: DS.blue, color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 18px rgba(26,86,219,0.32)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="4" y1="7"  x2="20" y2="7"/>
-          <line x1="4" y1="12" x2="20" y2="12"/>
-          <line x1="4" y1="17" x2="14" y2="17"/>
+          <line x1="8" y1="6"  x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6"  x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
         </svg>
-        {filtered.length > 0 && (
-          <span style={{ position: 'absolute', top: -4, left: -4, minWidth: 18, height: 18, borderRadius: 9, background: DS.red, border: `2px solid ${DS.surface}`, fontSize: 9, fontFamily: DS.mono, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
-            {filtered.length > 99 ? '99+' : filtered.length}
-          </span>
-        )}
       </button>
 
       {/* Mobile sidebar overlay */}
@@ -1897,32 +1870,12 @@ export default function DashboardPage() {
 
       {/* Mobile sidebar */}
       <div className={`sv-mobile-sidebar${mobileSidebarOpen ? ' open' : ''}`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: `1px solid ${DS.border}`, flexShrink: 0, background: DS.surface }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: `1px solid ${DS.border}`, flexShrink: 0 }}>
           <div style={{ fontFamily: DS.mono, fontSize: 13, fontWeight: 500, color: DS.text }}>Street<span style={{ color: DS.blue }}>Viz</span></div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <button onClick={openCreate} style={{ fontFamily: DS.body, fontSize: 12, fontWeight: 600, padding: '5px 12px', background: DS.blue, color: '#ffffff', border: 'none', borderRadius: DS.rSm, cursor: 'pointer', letterSpacing: '-0.01em' }}>+ {lang === 'pt' ? 'Novo' : 'New'}</button>
-            <button onClick={() => setMobileSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, fontSize: 22, lineHeight: 1, padding: '0 2px' }}>×</button>
-          </div>
+          <button onClick={() => setMobileSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, fontSize: 22, lineHeight: 1, padding: '0 2px' }}>×</button>
         </div>
         {SidebarContent}
       </div>
-
-      {/* Mobile right panel */}
-      {rightPanel && (
-        <div className="sv-mobile-right-panel" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 800, background: DS.surface, borderRadius: '16px 16px 0 0', boxShadow: `0 -4px 28px rgba(0,0,0,0.14)`, display: 'flex', flexDirection: 'column', maxHeight: '82vh', animation: 'sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1)' }}>
-          <div style={{ width: 32, height: 3, borderRadius: 2, background: DS.border, margin: '10px auto 0' }} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 10px', borderBottom: `1px solid ${DS.borderLight}`, flexShrink: 0 }}>
-            <span style={{ fontFamily: DS.mono, fontSize: 13, fontWeight: 500, color: DS.text }}>
-              {rightPanel === 'notif' ? t.notifTitle : currentUserName ?? 'Perfil'}
-            </span>
-            <button onClick={() => setRightPanel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, fontSize: 20, lineHeight: 1, padding: '0 2px' }}>×</button>
-          </div>
-          {RightPanelBody}
-        </div>
-      )}
-      {rightPanel && (
-        <div className="sv-mobile-right-panel" onClick={() => setRightPanel(null)} style={{ position: 'fixed', inset: 0, zIndex: 799, background: 'rgba(0,0,0,0.28)', animation: 'sv-fadeIn 0.18s ease' }} />
-      )}
 
       {/* Mobile bottom sheet (form) */}
       {formMode && (
