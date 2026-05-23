@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StreetViz",
-  description: "Collaborative urban map platform",
+  title: "StreetViz | Reportar problemas na rua em Portugal",
+  description:
+    "Plataforma colaborativa para reportar buracos na estrada, passeios danificados e problemas urbanos em Portugal. Vê e adiciona ocorrências em tempo real.",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -11,6 +12,14 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
     shortcut: "/favicon.ico",
+  },
+  openGraph: {
+    title: "StreetViz",
+    description:
+      "Reporta buracos na estrada e problemas urbanos em Portugal.",
+    url: "https://streetviz.vercel.app",
+    siteName: "StreetViz",
+    type: "website",
   },
 };
 
@@ -20,16 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
+    <html lang="pt">
+      <body>
+        {children}
+
         {/* Google Search Console Verification */}
         <meta
           name="google-site-verification"
           content="gai7vNpgeF_KrDeWOg9yU8YoB5XMe-aNRluR99Lkelw"
         />
-      </head>
-
-      <body>{children}</body>
+      </body>
     </html>
   );
 }
