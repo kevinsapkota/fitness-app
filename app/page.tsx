@@ -13,7 +13,7 @@ const supabase = createClient(
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzdGxoZ3Z2b2lpbWNuc2FnZXh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNTMxMDUsImV4cCI6MjA4MjgyOTEwNX0.rBOqSWXtiwPrq1NMxkmHcLopx88RWNgPLGuf1ubM5W8"
 );
 
-// ── Design tokens (same as dashboard) ─────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 const DS = {
   blue:        "#1A56DB",
   blueDark:    "#1648C0",
@@ -52,51 +52,44 @@ type Categoria = "buraco" | "iluminacao" | "lixo" | "agua" | "vandalismo" | "veg
 type Status    = "ativo" | "em_analise" | "resolvido";
 
 interface Problem {
-  id:           string;
-  name:         string;
-  description:  string;
-  location?:    string;
-  latitude?:    number;
-  longitude?:   number;
-  gravidade:    number;
-  confirmacoes: number;
-  categoria?:   Categoria;
-  status?:      Status;
-  created_at?:  string;
+  id:            string;
+  name:          string;
+  description:   string;
+  location?:     string;
+  latitude?:     number;
+  longitude?:    number;
+  gravidade:     number;
+  confirmacoes:  number;
+  categoria?:    Categoria;
+  status?:       Status;
+  created_at?:   string;
   is_anonymous?: boolean;
-  user_name?:   string;
-  photo_urls?:  string[];
+  user_name?:    string;
+  photo_urls?:   string[];
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CAT_CFG: Record<Categoria, { color: string; bg: string; border: string; label: string }> = {
-  buraco:     { color: DS.red,    bg: DS.redLight,    border: DS.redBorder,    label: "Buraco"     },
-  iluminacao: { color: DS.amber,  bg: DS.amberLight,  border: DS.amberBorder,  label: "Iluminação" },
-  lixo:       { color: "#065F46", bg: "#ECFDF5",      border: "#6EE7B7",       label: "Lixo"       },
-  agua:       { color: "#0369A1", bg: "#EFF6FF",      border: "#93C5FD",       label: "Água"       },
-  vandalismo: { color: "#6D28D9", bg: "#F5F3FF",      border: "#C4B5FD",       label: "Vandalismo" },
-  vegetacao:  { color: "#166534", bg: "#F0FDF4",      border: "#86EFAC",       label: "Vegetação"  },
-  outro:      { color: DS.textSub,bg: DS.bg,          border: DS.border,       label: "Outro"      },
+  buraco:     { color: DS.red,     bg: DS.redLight,    border: DS.redBorder,    label: "Buraco"     },
+  iluminacao: { color: DS.amber,   bg: DS.amberLight,  border: DS.amberBorder,  label: "Iluminação" },
+  lixo:       { color: "#065F46",  bg: "#ECFDF5",      border: "#6EE7B7",       label: "Lixo"       },
+  agua:       { color: "#0369A1",  bg: "#EFF6FF",      border: "#93C5FD",       label: "Água"       },
+  vandalismo: { color: "#6D28D9",  bg: "#F5F3FF",      border: "#C4B5FD",       label: "Vandalismo" },
+  vegetacao:  { color: "#166534",  bg: "#F0FDF4",      border: "#86EFAC",       label: "Vegetação"  },
+  outro:      { color: DS.textSub, bg: DS.bg,          border: DS.border,       label: "Outro"      },
 };
 
 const STATUS_CFG: Record<Status, { color: string; bg: string; border: string; label: string }> = {
-  ativo:      { color: DS.red,   bg: DS.redLight,   border: DS.redBorder,   label: "Ativo"       },
-  em_analise: { color: DS.amber, bg: DS.amberLight, border: DS.amberBorder, label: "Em análise"  },
-  resolvido:  { color: DS.green, bg: DS.greenLight, border: DS.greenBorder, label: "Resolvido"   },
+  ativo:      { color: DS.red,   bg: DS.redLight,   border: DS.redBorder,   label: "Ativo"      },
+  em_analise: { color: DS.amber, bg: DS.amberLight, border: DS.amberBorder, label: "Em análise" },
+  resolvido:  { color: DS.green, bg: DS.greenLight, border: DS.greenBorder, label: "Resolvido"  },
 };
 
-function sevColor(g: number) {
-  return g === 3 ? DS.red : g === 2 ? DS.amber : DS.green;
-}
-function sevLabel(g: number) {
-  return g === 3 ? "Alto" : g === 2 ? "Médio" : "Baixo";
-}
-function sevBg(g: number) {
-  return g === 3 ? DS.redLight : g === 2 ? DS.amberLight : DS.greenLight;
-}
-function sevBorder(g: number) {
-  return g === 3 ? DS.redBorder : g === 2 ? DS.amberBorder : DS.greenBorder;
-}
+function sevColor(g: number) { return g === 3 ? DS.red : g === 2 ? DS.amber : DS.green; }
+function sevLabel(g: number) { return g === 3 ? "Alto" : g === 2 ? "Médio" : "Baixo"; }
+function sevBg(g: number)    { return g === 3 ? DS.redLight : g === 2 ? DS.amberLight : DS.greenLight; }
+function sevBorder(g: number){ return g === 3 ? DS.redBorder : g === 2 ? DS.amberBorder : DS.greenBorder; }
+
 function timeAgo(iso?: string): string {
   if (!iso) return "";
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -109,7 +102,6 @@ function getVibrancy(p: Problem) {
   return Math.min(100, Math.round(p.confirmacoes * 5 + p.gravidade * 10));
 }
 
-// ── Badge component ───────────────────────────────────────────────────────────
 function Badge({ label, color, bg, border }: { label: string; color: string; bg: string; border: string }) {
   return (
     <span style={{
@@ -123,7 +115,136 @@ function Badge({ label, color, bg, border }: { label: string; color: string; bg:
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Cookie Banner ─────────────────────────────────────────────────────────────
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+  const [hiding,  setHiding]  = useState(false);
+
+  useEffect(() => {
+    const consent = localStorage.getItem("sv_cookie_consent");
+    if (!consent) {
+      const t = setTimeout(() => setVisible(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const dismiss = (value: "accepted" | "rejected") => {
+    localStorage.setItem("sv_cookie_consent", value);
+    setHiding(true);
+    setTimeout(() => setVisible(false), 380);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <>
+      <style>{`
+        @keyframes sv-cookieUp {
+          from { transform: translateY(110%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes sv-cookieDown {
+          from { transform: translateY(0);    opacity: 1; }
+          to   { transform: translateY(110%); opacity: 0; }
+        }
+        .sv-cookie-banner { animation: sv-cookieUp 0.42s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+        .sv-cookie-banner.hiding { animation: sv-cookieDown 0.36s cubic-bezier(0.4, 0, 1, 1) forwards; }
+        .sv-cookie-btn-secondary:hover { background: #F3F4F6 !important; }
+        .sv-cookie-btn-primary:hover   { background: #1648C0 !important; }
+      `}</style>
+
+      <div
+        className={`sv-cookie-banner${hiding ? " hiding" : ""}`}
+        style={{
+          position: "fixed",
+          bottom: 24,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 900,
+          width: "calc(100% - 32px)",
+          maxWidth: 600,
+          background: "#FFFFFF",
+          borderRadius: 14,
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+          padding: "20px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 20,
+          flexWrap: "wrap" as const,
+        }}
+      >
+        {/* Left: icon + text */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flex: 1, minWidth: 0 }}>
+          {/* Shield icon */}
+          <div style={{
+            width: 38, height: 38, borderRadius: 8,
+            background: DS.blueLight,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={DS.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{
+              fontFamily: DS.body, fontWeight: 600, fontSize: 13.5,
+              color: DS.text, marginBottom: 3, letterSpacing: "-0.01em",
+            }}>
+              Privacidade e cookies
+            </p>
+            <p style={{
+              fontFamily: DS.body, fontWeight: 400, fontSize: 12.5,
+              color: DS.textSub, lineHeight: 1.55, margin: 0,
+            }}>
+              Utilizamos apenas cookies essenciais para o funcionamento da plataforma.{" "}
+              <Link
+                href="/privacy"
+                style={{ color: DS.blue, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}
+              >
+                Política de Privacidade
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Right: buttons */}
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button
+            className="sv-cookie-btn-secondary"
+            onClick={() => dismiss("rejected")}
+            style={{
+              fontFamily: DS.body, fontSize: 13, fontWeight: 500,
+              color: DS.textSub, background: "#F9FAFB",
+              border: "1px solid #E5E7EB",
+              borderRadius: 8, padding: "8px 16px", cursor: "pointer",
+              transition: "background 0.15s", whiteSpace: "nowrap" as const,
+            }}
+          >
+            Apenas essenciais
+          </button>
+          <button
+            className="sv-cookie-btn-primary"
+            onClick={() => dismiss("accepted")}
+            style={{
+              fontFamily: DS.body, fontSize: 13, fontWeight: 600,
+              color: "#fff", background: DS.blue,
+              border: "none", borderRadius: 8,
+              padding: "8px 20px", cursor: "pointer",
+              transition: "background 0.15s", whiteSpace: "nowrap" as const,
+            }}
+          >
+            Aceitar
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
   const mapRef         = useRef<HTMLDivElement>(null);
@@ -135,7 +256,6 @@ export default function Home() {
   const [sheetOpen,      setSheetOpen]      = useState(false);
   const [recentProblems, setRecentProblems] = useState<Problem[]>([]);
 
-  // ── Fetch problems from Supabase ──────────────────────────────────────────
   useEffect(() => {
     supabase
       .from("problems")
@@ -148,20 +268,17 @@ export default function Home() {
       });
   }, []);
 
-  // ── Open bottom sheet for a problem ──────────────────────────────────────
   const openSheet = useCallback((p: Problem) => {
     setSelected(p);
     setSheetOpen(true);
   }, []);
 
-  // ── Build / update map markers whenever problems change ───────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const initMap = (L: any) => {
       if (!mapRef.current) return;
 
-      // Create map once
       if (!mapInstanceRef.current) {
         const map = L.map(mapRef.current, {
           center: [39.5, -8.0],
@@ -178,23 +295,19 @@ export default function Home() {
       }
 
       const map = mapInstanceRef.current;
-
-      // Clear old markers
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
 
-      // Add real markers
       problems
         .filter(p => p.latitude && p.longitude)
         .forEach(p => {
-          const color  = sevColor(p.gravidade);
-          const icon   = L.divIcon({
+          const color = sevColor(p.gravidade);
+          const icon  = L.divIcon({
             className: "",
             html: `<div style="
               width:14px;height:14px;border-radius:50%;
               background:${color};border:2.5px solid white;
-              box-shadow:0 2px 8px rgba(0,0,0,0.25);
-              cursor:pointer;
+              box-shadow:0 2px 8px rgba(0,0,0,0.25);cursor:pointer;
             "></div>`,
             iconSize:   [14, 14],
             iconAnchor: [7, 7],
@@ -205,51 +318,40 @@ export default function Home() {
         });
     };
 
-    // Load Leaflet if needed
-    if ((window as any).L) {
-      initMap((window as any).L);
-      return;
-    }
+    if ((window as any).L) { initMap((window as any).L); return; }
 
     if (!document.getElementById("leaflet-css")) {
-      const link   = document.createElement("link");
-      link.id      = "leaflet-css";
-      link.rel     = "stylesheet";
-      link.href    = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      const link = document.createElement("link");
+      link.id = "leaflet-css"; link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
       document.head.appendChild(link);
     }
-
     if (!document.getElementById("leaflet-js")) {
-      const script    = document.createElement("script");
-      script.id       = "leaflet-js";
-      script.src      = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.async    = true;
-      script.onload   = () => initMap((window as any).L);
+      const script = document.createElement("script");
+      script.id = "leaflet-js"; script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.async = true; script.onload = () => initMap((window as any).L);
       document.head.appendChild(script);
     }
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problems]);
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f4f6fb] text-gray-900 relative overflow-x-hidden font-sans">
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-        @keyframes sv-sheetUp  { from { transform: translateY(100%) } to { transform: translateY(0) } }
-        @keyframes sv-fadeIn   { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes sv-fadeUp   { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes sv-pulse    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes sv-sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+        @keyframes sv-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes sv-fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
         .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.28);animation:sv-fadeIn 0.18s ease; }
         .sv-bottom-sheet  { position:fixed;left:0;right:0;bottom:0;z-index:600;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 36px rgba(0,0,0,0.13);animation:sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1);max-height:88vh;overflow-y:auto; }
         .sv-marker-card:hover { transform:translateY(-2px)!important; box-shadow:0 4px 18px rgba(0,0,0,0.1)!important; }
+        .sv-footer-link { color:#6B7280; font-size:13px; text-decoration:none; transition:color 0.15s; }
+        .sv-footer-link:hover { color:#1A56DB; }
       `}</style>
 
       {/* ───── NAV ───── */}
@@ -317,7 +419,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── REPORTADO RECENTEMENTE (dados reais) ───── */}
+      {/* ───── REPORTADO RECENTEMENTE ───── */}
       <section className="px-6 pb-20">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-5 text-center">
@@ -327,10 +429,10 @@ export default function Home() {
             {recentProblems.length === 0 ? (
               <div className="text-center text-sm text-gray-400 py-6">Ainda não há ocorrências reportadas.</div>
             ) : recentProblems.map((item) => {
-              const catCfg    = CAT_CFG[item.categoria ?? "outro"];
-              const sColor    = sevColor(item.gravidade);
-              const sBg       = sevBg(item.gravidade);
-              const sBorder   = sevBorder(item.gravidade);
+              const catCfg  = CAT_CFG[item.categoria ?? "outro"];
+              const sColor  = sevColor(item.gravidade);
+              const sBg     = sevBg(item.gravidade);
+              const sBorder = sevBorder(item.gravidade);
               return (
                 <div
                   key={item.id}
@@ -369,15 +471,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── MAPA LEAFLET REAL ───── */}
+      {/* ───── MAPA LEAFLET ───── */}
       <section className="px-6 pb-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">O mapa da tua cidade</h2>
           <p className="text-gray-400 text-sm text-center mb-5">
             Todos os problemas, num só lugar. Clica num marcador para ver os detalhes.
           </p>
-
-          {/* Legend */}
           <div className="flex items-center justify-center gap-5 mb-5 flex-wrap">
             {[
               { color: "#ef4444", label: "Alto"  },
@@ -393,7 +493,6 @@ export default function Home() {
               {problems.filter(p => p.latitude && p.longitude).length} ocorrência{problems.filter(p => p.latitude && p.longitude).length !== 1 ? "s" : ""}
             </div>
           </div>
-
           <div className="rounded-3xl overflow-hidden border border-gray-200 shadow-xl" style={{ height: 420, position: "relative" }}>
             <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
             {problems.length === 0 && (
@@ -404,7 +503,6 @@ export default function Home() {
               </div>
             )}
           </div>
-
           <div className="text-center mt-5">
             <button onClick={() => router.push("/dashboard")} className="text-blue-600 text-sm font-semibold hover:underline">
               Abrir mapa completo →
@@ -419,8 +517,8 @@ export default function Home() {
         <p className="text-center text-gray-400 mb-14 text-sm">Simples. Direto. Eficaz.</p>
         <div className="grid md:grid-cols-3 gap-10 max-w-4xl mx-auto">
           {[
-            { n: "1", title: "Explora o mapa",              desc: "Vê todos os problemas reportados perto de ti, em tempo real." },
-            { n: "2", title: "Reporta em segundos",         desc: "Adiciona uma ocorrência com localização, foto e descrição." },
+            { n: "1", title: "Explora o mapa",                   desc: "Vê todos os problemas reportados perto de ti, em tempo real." },
+            { n: "2", title: "Reporta em segundos",              desc: "Adiciona uma ocorrência com localização, foto e descrição." },
             { n: "3", title: "Problemas resolvidos mais rápido", desc: "A câmara municipal recebe alertas e resolve com base na prioridade da comunidade." },
           ].map((step) => (
             <div key={step.n} className="relative pl-7 border-l-2 border-blue-100 hover:border-blue-400 transition-colors duration-300 group">
@@ -449,15 +547,52 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── BOTTOM SHEET OVERLAY ───── */}
+      {/* ───── FOOTER ───── */}
+      <footer className="bg-white border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
+            <div>
+              <img src="/logo.png" alt="StreetViz" className="h-10 w-auto mb-1" />
+              <p className="text-xs text-gray-400 font-light">Feito por cidadãos, para cidadãos.</p>
+            </div>
+            <div className="flex flex-col gap-1.5 text-sm text-gray-500">
+              <a href="mailto:histreetviz@gmail.com" className="sv-footer-link flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                histreetviz@gmail.com
+              </a>
+              <a href="tel:+351964221091" className="sv-footer-link flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.64 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                964 221 091
+              </a>
+            </div>
+          </div>
+          <div className="border-t border-gray-100 mb-6" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-gray-400">
+              © {new Date().getFullYear()} StreetViz. Todos os direitos reservados.
+            </p>
+            <div className="flex items-center gap-1 text-xs text-gray-400">
+              <Link href="/terms" className="sv-footer-link">Termos e Condições</Link>
+              <span className="mx-2 text-gray-200">|</span>
+              <Link href="/privacy" className="sv-footer-link">Política de Privacidade</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* ───── COOKIE BANNER ───── */}
+      <CookieBanner />
+
+      {/* ───── BOTTOM SHEET ───── */}
       {sheetOpen && (
         <>
           <div className="sv-sheet-overlay" onClick={() => setSheetOpen(false)} />
           <div className="sv-bottom-sheet" style={{ fontFamily: DS.body }}>
-
-            {/* Handle */}
             <div style={{ width: 36, height: 4, borderRadius: 2, background: DS.borderLight, margin: "14px auto 4px" }} />
-
             {selected && (() => {
               const catCfg    = CAT_CFG[selected.categoria ?? "outro"];
               const statusCfg = STATUS_CFG[selected.status ?? "ativo"];
@@ -465,11 +600,8 @@ export default function Home() {
               const sBg       = sevBg(selected.gravidade);
               const sBorder   = sevBorder(selected.gravidade);
               const vib       = getVibrancy(selected);
-
               return (
                 <div style={{ padding: "10px 20px 40px", animation: "sv-fadeUp 0.2s ease" }}>
-
-                  {/* Header row */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7, flexWrap: "wrap" }}>
@@ -477,20 +609,16 @@ export default function Home() {
                         <span style={{ fontSize: 17, fontWeight: 600, color: DS.text, letterSpacing: "-0.02em", lineHeight: 1.25 }}>{selected.name}</span>
                       </div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                        <Badge label={sevLabel(selected.gravidade)} color={sColor}           bg={sBg}           border={sBorder}          />
-                        <Badge label={catCfg.label}                 color={catCfg.color}     bg={catCfg.bg}     border={catCfg.border}    />
-                        <Badge label={statusCfg.label}              color={statusCfg.color}  bg={statusCfg.bg}  border={statusCfg.border} />
+                        <Badge label={sevLabel(selected.gravidade)} color={sColor}          bg={sBg}           border={sBorder}          />
+                        <Badge label={catCfg.label}                 color={catCfg.color}    bg={catCfg.bg}     border={catCfg.border}    />
+                        <Badge label={statusCfg.label}              color={statusCfg.color} bg={statusCfg.bg}  border={statusCfg.border} />
                       </div>
                     </div>
                     <button onClick={() => setSheetOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: DS.textMuted, fontSize: 24, lineHeight: 1, padding: "0 0 0 12px", flexShrink: 0, marginTop: 2 }}>×</button>
                   </div>
-
-                  {/* Description */}
                   <p style={{ fontSize: 14, color: DS.textSub, lineHeight: 1.65, marginBottom: 14, letterSpacing: "-0.005em" }}>
                     {selected.description}
                   </p>
-
-                  {/* Photos */}
                   {selected.photo_urls && selected.photo_urls.length > 0 && (
                     <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
                       {selected.photo_urls.map((url, i) => (
@@ -500,8 +628,6 @@ export default function Home() {
                       ))}
                     </div>
                   )}
-
-                  {/* Meta grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                     {[
                       { label: "Localização",   value: selected.location ?? "—" },
@@ -515,8 +641,6 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Vibrancy score */}
                   <div style={{ background: DS.bg, borderRadius: DS.rSm, padding: "10px 12px", border: `1px solid ${DS.borderLight}`, marginBottom: 20 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontSize: 9, fontFamily: DS.mono, letterSpacing: "0.07em", textTransform: "uppercase", color: DS.textFaint }}>Vibrancy Score</span>
@@ -526,8 +650,6 @@ export default function Home() {
                       <div style={{ width: `${vib}%`, height: "100%", background: DS.blue, borderRadius: 2, transition: "width 0.8s cubic-bezier(0.34,1.56,0.64,1)" }} />
                     </div>
                   </div>
-
-                  {/* CTA */}
                   <button
                     onClick={() => router.push("/dashboard")}
                     style={{ width: "100%", padding: "13px 0", fontFamily: DS.body, fontSize: 14, fontWeight: 600, background: DS.blue, color: "#fff", border: "none", borderRadius: DS.rMd, cursor: "pointer", letterSpacing: "-0.01em", boxShadow: "0 2px 12px rgba(26,86,219,0.22)", transition: DS.trans }}
