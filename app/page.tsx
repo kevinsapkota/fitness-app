@@ -255,16 +255,39 @@ export default function Home() {
   const [selected,       setSelected]       = useState<Problem | null>(null);
   const [sheetOpen,      setSheetOpen]      = useState(false);
   const [recentProblems, setRecentProblems] = useState<Problem[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [mapLoading,     setMapLoading]     = useState(true);
+  const [error,          setError]          = useState(false);
+  const [toast,          setToast]          = useState(false);
+
+  const showToast = () => {
+    setToast(true);
+    setTimeout(() => setToast(false), 5000);
+  };
 
   useEffect(() => {
     supabase
       .from("problems")
       .select("*")
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        const list = (data as Problem[]) || [];
+      .then(({ data, error: err }) => {
+        if (err || !data) {
+          setError(true);
+          setLoading(false);
+          setMapLoading(false);
+          showToast();
+          return;
+        }
+        const list = data as Problem[];
         setProblems(list);
         setRecentProblems(list.slice(0, 2));
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+        setMapLoading(false);
+        showToast();
       });
   }, []);
 
@@ -288,10 +311,13 @@ export default function Home() {
           attributionControl: false,
         });
         mapInstanceRef.current = map;
-        L.tileLayer(
+        const tileLayer = L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
           { maxZoom: 19 }
         ).addTo(map);
+        tileLayer.on("load", () => setMapLoading(false));
+        // Fallback: hide spinner after 4s even if tiles haven't all loaded
+        setTimeout(() => setMapLoading(false), 4000);
       }
 
       const map = mapInstanceRef.current;
@@ -347,11 +373,19 @@ export default function Home() {
         @keyframes sv-sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
         @keyframes sv-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
         @keyframes sv-fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes sv-skeleton { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+        @keyframes sv-spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+        @keyframes sv-toastIn  { from { opacity:0; transform:translateY(-16px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes sv-toastOut { from { opacity:1; transform:translateY(0) } to { opacity:0; transform:translateY(-16px) } }
         .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.28);animation:sv-fadeIn 0.18s ease; }
         .sv-bottom-sheet  { position:fixed;left:0;right:0;bottom:0;z-index:600;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 36px rgba(0,0,0,0.13);animation:sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1);max-height:88vh;overflow-y:auto; }
         .sv-marker-card:hover { transform:translateY(-2px)!important; box-shadow:0 4px 18px rgba(0,0,0,0.1)!important; }
         .sv-footer-link { color:#6B7280; font-size:13px; text-decoration:none; transition:color 0.15s; }
         .sv-footer-link:hover { color:#1A56DB; }
+        .sv-skeleton { background:#F3F4F6; border-radius:6px; animation:sv-skeleton 1.4s ease-in-out infinite; }
+        .sv-spinner { width:22px;height:22px;border:2.5px solid #E5E7EB;border-top-color:#1A56DB;border-radius:50%;animation:sv-spin 0.75s linear infinite; }
+        .sv-toast { animation: sv-toastIn 0.28s cubic-bezier(0.32,0.72,0,1) forwards; }
+        .sv-toast.hiding { animation: sv-toastOut 0.24s ease forwards; }
       `}</style>
 
       {/* ───── NAV ───── */}
@@ -426,7 +460,55 @@ export default function Home() {
             Reportado recentemente
           </p>
           <div className="space-y-3">
-            {recentProblems.length === 0 ? (
+            {loading ? (
+              // ── Skeleton cards ──
+              [0, 1].map(i => (
+                <div key={i} className="bg-white/70 border border-gray-100 rounded-2xl p-4 flex items-start gap-4" style={{ boxShadow: DS.shadowSm }}>
+                  <div className="sv-skeleton mt-1.5 flex-shrink-0" style={{ width: 10, height: 10, borderRadius: "50%" }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="sv-skeleton" style={{ width: 120, height: 14 }} />
+                      <div className="sv-skeleton" style={{ width: 40, height: 14 }} />
+                      <div className="sv-skeleton" style={{ width: 50, height: 14 }} />
+                    </div>
+                    <div className="sv-skeleton" style={{ width: "90%", height: 12 }} />
+                    <div className="sv-skeleton" style={{ width: "60%", height: 12 }} />
+                    <div className="sv-skeleton" style={{ width: 140, height: 11 }} />
+                  </div>
+                </div>
+              ))
+            ) : error ? (
+              // ── Error banner ──
+              <div style={{
+                background: DS.redLight, border: `1px solid ${DS.redBorder}`,
+                borderRadius: 16, padding: "20px 20px",
+                display: "flex", alignItems: "flex-start", gap: 14,
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: "#FEE2E2", display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DS.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 14, color: DS.red, marginBottom: 4 }}>
+                    Não foi possível carregar as ocorrências
+                  </p>
+                  <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 13, color: "#B91C1C", lineHeight: 1.6 }}>
+                    Verifica a tua ligação à internet e{" "}
+                    <button
+                      onClick={() => window.location.reload()}
+                      style={{ color: DS.red, fontWeight: 600, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontFamily: DS.body, fontSize: 13, padding: 0 }}
+                    >
+                      tenta novamente
+                    </button>
+                    .
+                  </p>
+                </div>
+              </div>
+            ) : recentProblems.length === 0 ? (
               <div className="text-center text-sm text-gray-400 py-6">Ainda não há ocorrências reportadas.</div>
             ) : recentProblems.map((item) => {
               const catCfg  = CAT_CFG[item.categoria ?? "outro"];
@@ -489,17 +571,27 @@ export default function Home() {
                 {label}
               </div>
             ))}
+            {loading ? (
+              <div className="sv-skeleton" style={{ width: 80, height: 22, borderRadius: 20 }} />
+            ) : (
             <div style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textSub, background: DS.blueLight, border: `1px solid ${DS.blueBorder}`, borderRadius: 20, padding: "2px 10px" }}>
               {problems.filter(p => p.latitude && p.longitude).length} ocorrência{problems.filter(p => p.latitude && p.longitude).length !== 1 ? "s" : ""}
             </div>
+            )}
           </div>
           <div className="rounded-3xl overflow-hidden border border-gray-200 shadow-xl" style={{ height: 420, position: "relative" }}>
             <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
-            {problems.length === 0 && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <div style={{ fontFamily: DS.mono, fontSize: 12, color: DS.textFaint, background: DS.surface, border: `1px solid ${DS.border}`, borderRadius: DS.rMd, padding: "8px 16px" }}>
-                  A carregar ocorrências...
-                </div>
+            {error ? (
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FEF2F2", pointerEvents: "none", gap: 10 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={DS.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.red }}>Erro ao carregar o mapa</span>
+              </div>
+            ) : (mapLoading || (problems.length === 0 && loading)) && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#F8F9FB", pointerEvents: "none", gap: 12 }}>
+                <div className="sv-spinner" />
+                <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>A carregar mapa...</span>
               </div>
             )}
           </div>
@@ -583,6 +675,42 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ───── TOAST ERRO DE REDE ───── */}
+      {toast && (
+        <div className="sv-toast" style={{
+          position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
+          zIndex: 950, width: "calc(100% - 32px)", maxWidth: 420,
+          background: "#111827", borderRadius: 12,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+          padding: "14px 16px",
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: "rgba(220,38,38,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13, color: "#F9FAFB", marginBottom: 2 }}>
+              Erro de ligação
+            </p>
+            <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 12, color: "#9CA3AF", lineHeight: 1.5 }}>
+              Não foi possível ligar ao servidor. Verifica a tua internet.
+            </p>
+          </div>
+          <button
+            onClick={() => setToast(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", fontSize: 18, lineHeight: 1, flexShrink: 0, padding: 4 }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* ───── COOKIE BANNER ───── */}
       <CookieBanner />
