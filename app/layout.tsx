@@ -17,27 +17,22 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "StreetViz",
-    description:
-      "Reporta buracos na estrada e problemas urbanos em Portugal.",
+    description: "Reporta buracos na estrada e problemas urbanos em Portugal.",
     url: "https://streetviz.vercel.app",
     siteName: "StreetViz",
     type: "website",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt">
       <body>
         <Suspense fallback={null}>
-          <NavigationLoader />
+          <NavigationLoader>
+            {children}
+          </NavigationLoader>
         </Suspense>
-
-        {children}
 
         {/* Google Search Console Verification */}
         <meta
