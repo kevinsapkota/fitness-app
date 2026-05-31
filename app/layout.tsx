@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
+import NavigationLoader from "@/app/dashboard/components/NavigationLoader";
 
 export const metadata: Metadata = {
   title: "StreetViz | Reportar problemas na rua em Portugal",
@@ -31,6 +33,10 @@ export default function RootLayout({
   return (
     <html lang="pt">
       <body>
+        <Suspense fallback={null}>
+          <NavigationLoader />
+        </Suspense>
+
         {children}
 
         {/* Google Search Console Verification */}
