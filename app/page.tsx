@@ -296,31 +296,24 @@ export default function Home() {
   };
 
   useEffect(() => {
-    supabase
-      .from("problems")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data, error: err }) => {
-        if (err || !data) {
-          setError(true);
-          setLoading(false);
-          setMapLoading(false);
-          showToast();
-          return;
-        }
-        const list = data as Problem[];
-        setProblems(list);
-        setRecentProblems(list.slice(0, 2));
-        setLoading(false);
-      })
-      .catch(() => {
+  supabase
+    .from("problems")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .then(({ data, error: err }) => {
+      if (err || !data) {
         setError(true);
         setLoading(false);
         setMapLoading(false);
         showToast();
-      });
-  }, []);
-
+        return;
+      }
+      const list = data as Problem[];
+      setProblems(list);
+      setRecentProblems(list.slice(0, 2));
+      setLoading(false);
+    });
+}, []);
   const openSheet = useCallback((p: Problem) => {
     setSelected(p);
     setSheetOpen(true);
