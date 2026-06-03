@@ -15,12 +15,10 @@ const supabase = createClient(
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const DS = {
-  // Blues — more saturated, less generic
   blue:        "#0A2FFF",
   blueDark:    "#0822D4",
   blueLight:   "#EEF2FF",
   blueBorder:  "#C7D2FE",
-  // Status
   red:         "#DC2626",
   redLight:    "#FEF2F2",
   redBorder:   "#FCA5A5",
@@ -30,23 +28,20 @@ const DS = {
   green:       "#059669",
   greenLight:  "#ECFDF5",
   greenBorder: "#6EE7B7",
-  // Surface — off-white warm, not cold grey
   bg:          "#F5F4F0",
   surface:     "#FFFFFF",
   surfaceWarm: "#FAFAF8",
   border:      "#E8E7E2",
   borderLight: "#F0EFE9",
-  // Dark section
   dark:        "#0A0F1E",
   darkSub:     "#1A2035",
   darkBorder:  "#2A3050",
-  // Text
   text:        "#0D1117",
   textSub:     "#5C6070",
   textMuted:   "#9098A8",
   textFaint:   "#B8BFCC",
-  mono:        "'Geist Mono', 'DM Mono', monospace",
-  body:        "'Geist', 'DM Sans', sans-serif",
+  mono:        "'DM Mono', monospace",
+  body:        "'Inter', sans-serif",
   rSm:         8,
   rMd:         10,
   rLg:         14,
@@ -107,6 +102,7 @@ function timeAgo(iso?: string): string {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}d`;
 }
+
 function getVibrancy(p: Problem) {
   return Math.min(100, Math.round(p.confirmacoes * 5 + p.gravidade * 10));
 }
@@ -128,7 +124,6 @@ function Badge({ label, color, bg, border }: { label: string; color: string; bg:
 function Ticker({ problems }: { problems: Problem[] }) {
   if (problems.length === 0) return null;
   const items = problems.slice(0, 8);
-  // Duplicate for seamless loop
   const all = [...items, ...items];
   return (
     <div style={{
@@ -296,24 +291,25 @@ export default function Home() {
   };
 
   useEffect(() => {
-  supabase
-    .from("problems")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .then(({ data, error: err }) => {
-      if (err || !data) {
-        setError(true);
+    supabase
+      .from("problems")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error: err }) => {
+        if (err || !data) {
+          setError(true);
+          setLoading(false);
+          setMapLoading(false);
+          showToast();
+          return;
+        }
+        const list = data as Problem[];
+        setProblems(list);
+        setRecentProblems(list.slice(0, 2));
         setLoading(false);
-        setMapLoading(false);
-        showToast();
-        return;
-      }
-      const list = data as Problem[];
-      setProblems(list);
-      setRecentProblems(list.slice(0, 2));
-      setLoading(false);
-    });
-}, []);
+      });
+  }, []);
+
   const openSheet = useCallback((p: Problem) => {
     setSelected(p);
     setSheetOpen(true);
@@ -394,17 +390,17 @@ export default function Home() {
     <div style={{ minHeight: "100vh", background: DS.bg, color: DS.text, fontFamily: DS.body, overflowX: "hidden" }}>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-        @keyframes sv-sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-        @keyframes sv-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes sv-fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes sv-sheetUp    { from { transform: translateY(100%) } to { transform: translateY(0) } }
+        @keyframes sv-fadeIn     { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes sv-fadeUp     { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
         @keyframes sv-fadeUpHero { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes sv-skeleton { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
-        @keyframes sv-spin     { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
-        @keyframes sv-toastIn  { from { opacity:0; transform:translateY(-16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes sv-toastOut { from { opacity:1; transform:translateY(0) } to { opacity:0; transform:translateY(-16px) } }
-        @keyframes sv-pulse    { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+        @keyframes sv-skeleton   { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+        @keyframes sv-spin       { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+        @keyframes sv-toastIn    { from { opacity:0; transform:translateY(-16px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes sv-toastOut   { from { opacity:1; transform:translateY(0) } to { opacity:0; transform:translateY(-16px) } }
+        @keyframes sv-pulse      { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
 
         .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.3);animation:sv-fadeIn 0.18s ease; }
         .sv-bottom-sheet  { position:fixed;left:0;right:0;bottom:0;z-index:600;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 36px rgba(0,0,0,0.13);animation:sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1);max-height:88vh;overflow-y:auto; }
@@ -431,7 +427,7 @@ export default function Home() {
           transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
           box-shadow: 0 2px 16px rgba(10,47,255,0.20);
         }
-        .sv-btn-primary:hover { background: ${DS.blueDark}; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,47,255,0.28); }
+        .sv-btn-primary:hover  { background: ${DS.blueDark}; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,47,255,0.28); }
         .sv-btn-primary:active { transform: scale(0.98); }
 
         .sv-btn-secondary {
@@ -443,7 +439,7 @@ export default function Home() {
           transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
           box-shadow: ${DS.shadowSm};
         }
-        .sv-btn-secondary:hover { background: ${DS.surfaceWarm}; transform: translateY(-1px); }
+        .sv-btn-secondary:hover  { background: ${DS.surfaceWarm}; transform: translateY(-1px); }
         .sv-btn-secondary:active { transform: scale(0.98); }
 
         .sv-nav-btn-ghost {
@@ -473,11 +469,6 @@ export default function Home() {
           <img src="/logo.png" alt="StreetViz" style={{ height: 52, width: "auto", cursor: "pointer" }} />
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button className="sv-nav-btn-ghost" onClick={() => router.push("/login")}
-            style={{ display: "none" }} // hidden on mobile, shown via media below
-          >
-            Entrar
-          </button>
           <style>{`@media(min-width:640px){ .sv-nav-entrar { display: block !important; } }`}</style>
           <button className="sv-nav-btn-ghost sv-nav-entrar" onClick={() => router.push("/login")}
             style={{ display: "none" }}
@@ -552,7 +543,7 @@ export default function Home() {
           lineHeight: 1.6,
           letterSpacing: "-0.01em",
         }}>
-          Reporta problemas na tua rua. A comunidade confirma. A câmara resolve.
+          Vê um problema? Reporta. A vizinhança vê. A câmara também pode ver.
         </p>
 
         {/* CTAs */}
@@ -608,13 +599,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── COMO FUNCIONA — inline, compact ───── */}
+      {/* ───── COMO FUNCIONA ───── */}
       <section style={{ padding: "64px 24px 0", maxWidth: 680, margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
           {[
-            { n: "1", title: "Vê o mapa",       desc: "Todos os problemas da tua zona, em tempo real." },
-            { n: "2", title: "Reporta",          desc: "Localização, foto, descrição. Em menos de 30 segundos." },
-            { n: "3", title: "A câmara age",     desc: "Prioridade definida pela comunidade. Não pelo acaso." },
+            { n: "1", title: "Vê o mapa",   desc: "Todos os problemas da tua zona, em tempo real." },
+            { n: "2", title: "Reporta",      desc: "Localização, foto, descrição. Em menos de 30 segundos." },
+            { n: "3", title: "A câmara age", desc: "Prioridade definida pela comunidade. Não pelo acaso." },
           ].map((step) => (
             <div key={step.n} className="sv-step" style={{
               paddingLeft: 16,
@@ -761,7 +752,7 @@ export default function Home() {
       {/* ───── MAPA ───── */}
       <section style={{ padding: "64px 0 0" }}>
         <div style={{ maxWidth: "100%", margin: "0 auto" }}>
-          <div style={{ padding: "0 24px", marginBottom: 20, display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, maxWidth: 1100, margin: "0 auto 20px" }}>
+          <div style={{ padding: "0 24px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, maxWidth: 1100, margin: "0 auto 20px" }}>
             <div>
               <h2 style={{ fontFamily: DS.body, fontWeight: 700, fontSize: "clamp(22px, 4vw, 30px)", color: DS.text, letterSpacing: "-0.025em", marginBottom: 4 }}>
                 O mapa da tua cidade
@@ -822,7 +813,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── CTA FINAL — dark section ───── */}
+      {/* ───── CTA FINAL ───── */}
       <section style={{
         marginTop: 80,
         background: DS.dark,
@@ -831,13 +822,11 @@ export default function Home() {
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* subtle grid texture */}
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.04,
           backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }} />
-
         <p style={{ fontFamily: DS.mono, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4A5568", marginBottom: 24 }}>
           Junta-te à vizinhança
         </p>
