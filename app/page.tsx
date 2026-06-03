@@ -15,10 +15,12 @@ const supabase = createClient(
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const DS = {
-  blue:        "#1A56DB",
-  blueDark:    "#1648C0",
-  blueLight:   "#EFF6FF",
-  blueBorder:  "#BFDBFE",
+  // Blues — more saturated, less generic
+  blue:        "#0A2FFF",
+  blueDark:    "#0822D4",
+  blueLight:   "#EEF2FF",
+  blueBorder:  "#C7D2FE",
+  // Status
   red:         "#DC2626",
   redLight:    "#FEF2F2",
   redBorder:   "#FCA5A5",
@@ -28,22 +30,29 @@ const DS = {
   green:       "#059669",
   greenLight:  "#ECFDF5",
   greenBorder: "#6EE7B7",
-  bg:          "#F8F9FB",
+  // Surface — off-white warm, not cold grey
+  bg:          "#F5F4F0",
   surface:     "#FFFFFF",
-  border:      "#EBEBEB",
-  borderLight: "#F3F4F6",
-  text:        "#111827",
-  textSub:     "#6B7280",
-  textMuted:   "#9CA3AF",
-  textFaint:   "#C4C9D4",
-  mono:        "'DM Mono', monospace",
-  body:        "'DM Sans', sans-serif",
+  surfaceWarm: "#FAFAF8",
+  border:      "#E8E7E2",
+  borderLight: "#F0EFE9",
+  // Dark section
+  dark:        "#0A0F1E",
+  darkSub:     "#1A2035",
+  darkBorder:  "#2A3050",
+  // Text
+  text:        "#0D1117",
+  textSub:     "#5C6070",
+  textMuted:   "#9098A8",
+  textFaint:   "#B8BFCC",
+  mono:        "'Geist Mono', 'DM Mono', monospace",
+  body:        "'Geist', 'DM Sans', sans-serif",
   rSm:         8,
   rMd:         10,
   rLg:         14,
-  shadowSm:    "0 1px 4px rgba(0,0,0,0.06)",
-  shadowMd:    "0 4px 20px rgba(0,0,0,0.08)",
-  shadowLg:    "0 8px 40px rgba(0,0,0,0.12)",
+  shadowSm:    "0 1px 4px rgba(0,0,0,0.05)",
+  shadowMd:    "0 4px 20px rgba(0,0,0,0.07)",
+  shadowLg:    "0 8px 40px rgba(0,0,0,0.10)",
   trans:       "all 0.18s ease",
 };
 
@@ -115,6 +124,58 @@ function Badge({ label, color, bg, border }: { label: string; color: string; bg:
   );
 }
 
+// ── Ticker ────────────────────────────────────────────────────────────────────
+function Ticker({ problems }: { problems: Problem[] }) {
+  if (problems.length === 0) return null;
+  const items = problems.slice(0, 8);
+  // Duplicate for seamless loop
+  const all = [...items, ...items];
+  return (
+    <div style={{
+      overflow: "hidden",
+      borderTop: `1px solid ${DS.border}`,
+      borderBottom: `1px solid ${DS.border}`,
+      background: DS.surfaceWarm,
+      padding: "10px 0",
+    }}>
+      <style>{`
+        @keyframes sv-ticker {
+          from { transform: translateX(0) }
+          to   { transform: translateX(-50%) }
+        }
+        .sv-ticker-track {
+          display: flex;
+          gap: 0;
+          width: max-content;
+          animation: sv-ticker 28s linear infinite;
+        }
+        .sv-ticker-track:hover { animation-play-state: paused; }
+      `}</style>
+      <div className="sv-ticker-track">
+        {all.map((p, i) => {
+          const cat = CAT_CFG[p.categoria ?? "outro"];
+          return (
+            <span key={i} style={{
+              fontFamily: DS.mono, fontSize: 11,
+              color: DS.textSub,
+              padding: "0 28px",
+              display: "flex", alignItems: "center", gap: 8,
+              borderRight: `1px solid ${DS.border}`,
+              whiteSpace: "nowrap",
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: sevColor(p.gravidade), display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: DS.text, fontWeight: 500 }}>{p.name}</span>
+              {p.location && <span style={{ color: DS.textMuted }}>· {p.location}</span>}
+              <span style={{ color: cat.color, background: cat.bg, border: `1px solid ${cat.border}`, borderRadius: 3, padding: "0px 5px", fontSize: 9 }}>{cat.label}</span>
+              <span style={{ color: DS.textFaint }}>{p.confirmacoes} confirm.</span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Cookie Banner ─────────────────────────────────────────────────────────────
 function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -150,92 +211,61 @@ function CookieBanner() {
         .sv-cookie-banner { animation: sv-cookieUp 0.42s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
         .sv-cookie-banner.hiding { animation: sv-cookieDown 0.36s cubic-bezier(0.4, 0, 1, 1) forwards; }
         .sv-cookie-btn-secondary:hover { background: #F3F4F6 !important; }
-        .sv-cookie-btn-primary:hover   { background: #1648C0 !important; }
+        .sv-cookie-btn-primary:hover   { background: #0822D4 !important; }
       `}</style>
-
       <div
         className={`sv-cookie-banner${hiding ? " hiding" : ""}`}
         style={{
-          position: "fixed",
-          bottom: 24,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 900,
-          width: "calc(100% - 32px)",
-          maxWidth: 600,
-          background: "#FFFFFF",
-          borderRadius: 14,
-          border: "1px solid #E5E7EB",
+          position: "fixed", bottom: 24, left: "50%",
+          transform: "translateX(-50%)", zIndex: 900,
+          width: "calc(100% - 32px)", maxWidth: 600,
+          background: "#FFFFFF", borderRadius: 14,
+          border: `1px solid ${DS.border}`,
           boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
           padding: "20px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 20,
-          flexWrap: "wrap" as const,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 20, flexWrap: "wrap" as const,
         }}
       >
-        {/* Left: icon + text */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flex: 1, minWidth: 0 }}>
-          {/* Shield icon */}
           <div style={{
             width: 38, height: 38, borderRadius: 8,
             background: DS.blueLight,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={DS.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
           <div>
-            <p style={{
-              fontFamily: DS.body, fontWeight: 600, fontSize: 13.5,
-              color: DS.text, marginBottom: 3, letterSpacing: "-0.01em",
-            }}>
+            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13.5, color: DS.text, marginBottom: 3 }}>
               Privacidade e cookies
             </p>
-            <p style={{
-              fontFamily: DS.body, fontWeight: 400, fontSize: 12.5,
-              color: DS.textSub, lineHeight: 1.55, margin: 0,
-            }}>
+            <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 12.5, color: DS.textSub, lineHeight: 1.55, margin: 0 }}>
               Utilizamos apenas cookies essenciais para o funcionamento da plataforma.{" "}
-              <Link
-                href="/privacy"
-                style={{ color: DS.blue, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}
-              >
+              <Link href="/privacy" style={{ color: DS.blue, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}>
                 Política de Privacidade
               </Link>
             </p>
           </div>
         </div>
-
-        {/* Right: buttons */}
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button
-            className="sv-cookie-btn-secondary"
-            onClick={() => dismiss("rejected")}
-            style={{
-              fontFamily: DS.body, fontSize: 13, fontWeight: 500,
-              color: DS.textSub, background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              borderRadius: 8, padding: "8px 16px", cursor: "pointer",
-              transition: "background 0.15s", whiteSpace: "nowrap" as const,
-            }}
-          >
+          <button className="sv-cookie-btn-secondary" onClick={() => dismiss("rejected")} style={{
+            fontFamily: DS.body, fontSize: 13, fontWeight: 500,
+            color: DS.textSub, background: "#F9FAFB",
+            border: `1px solid ${DS.border}`,
+            borderRadius: 8, padding: "8px 16px", cursor: "pointer",
+            transition: "background 0.15s", whiteSpace: "nowrap" as const,
+          }}>
             Apenas essenciais
           </button>
-          <button
-            className="sv-cookie-btn-primary"
-            onClick={() => dismiss("accepted")}
-            style={{
-              fontFamily: DS.body, fontSize: 13, fontWeight: 600,
-              color: "#fff", background: DS.blue,
-              border: "none", borderRadius: 8,
-              padding: "8px 20px", cursor: "pointer",
-              transition: "background 0.15s", whiteSpace: "nowrap" as const,
-            }}
-          >
+          <button className="sv-cookie-btn-primary" onClick={() => dismiss("accepted")} style={{
+            fontFamily: DS.body, fontSize: 13, fontWeight: 600,
+            color: "#fff", background: DS.blue,
+            border: "none", borderRadius: 8,
+            padding: "8px 20px", cursor: "pointer",
+            transition: "background 0.15s", whiteSpace: "nowrap" as const,
+          }}>
             Aceitar
           </button>
         </div>
@@ -316,7 +346,6 @@ export default function Home() {
           { maxZoom: 19 }
         ).addTo(map);
         tileLayer.on("load", () => setMapLoading(false));
-        // Fallback: hide spinner after 4s even if tiles haven't all loaded
         setTimeout(() => setMapLoading(false), 4000);
       }
 
@@ -365,123 +394,293 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problems]);
 
+  const reportedCount = problems.length;
+  const activeCount   = problems.filter(p => p.status === "ativo" || !p.status).length;
+
   return (
-    <div className="min-h-screen bg-[#f4f6fb] text-gray-900 relative overflow-x-hidden font-sans">
+    <div style={{ minHeight: "100vh", background: DS.bg, color: DS.text, fontFamily: DS.body, overflowX: "hidden" }}>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
         @keyframes sv-sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
         @keyframes sv-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
         @keyframes sv-fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes sv-fadeUpHero { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
         @keyframes sv-skeleton { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
-        @keyframes sv-spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+        @keyframes sv-spin     { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
         @keyframes sv-toastIn  { from { opacity:0; transform:translateY(-16px) } to { opacity:1; transform:translateY(0) } }
         @keyframes sv-toastOut { from { opacity:1; transform:translateY(0) } to { opacity:0; transform:translateY(-16px) } }
-        .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.28);animation:sv-fadeIn 0.18s ease; }
+        @keyframes sv-pulse    { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+
+        .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.3);animation:sv-fadeIn 0.18s ease; }
         .sv-bottom-sheet  { position:fixed;left:0;right:0;bottom:0;z-index:600;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 36px rgba(0,0,0,0.13);animation:sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1);max-height:88vh;overflow-y:auto; }
-        .sv-marker-card:hover { transform:translateY(-2px)!important; box-shadow:0 4px 18px rgba(0,0,0,0.1)!important; }
-        .sv-footer-link { color:#6B7280; font-size:13px; text-decoration:none; transition:color 0.15s; }
-        .sv-footer-link:hover { color:#1A56DB; }
-        .sv-skeleton { background:#F3F4F6; border-radius:6px; animation:sv-skeleton 1.4s ease-in-out infinite; }
-        .sv-spinner { width:22px;height:22px;border:2.5px solid #E5E7EB;border-top-color:#1A56DB;border-radius:50%;animation:sv-spin 0.75s linear infinite; }
+        .sv-marker-card:hover { transform:translateY(-2px)!important; box-shadow:0 4px 18px rgba(0,0,0,0.09)!important; }
+        .sv-footer-link { color:${DS.textSub}; font-size:13px; text-decoration:none; transition:color 0.15s; }
+        .sv-footer-link:hover { color:${DS.blue}; }
+        .sv-skeleton { background:#ECEAE4; border-radius:6px; animation:sv-skeleton 1.4s ease-in-out infinite; }
+        .sv-spinner { width:22px;height:22px;border:2.5px solid #E8E7E2;border-top-color:${DS.blue};border-radius:50%;animation:sv-spin 0.75s linear infinite; }
         .sv-toast { animation: sv-toastIn 0.28s cubic-bezier(0.32,0.72,0,1) forwards; }
         .sv-toast.hiding { animation: sv-toastOut 0.24s ease forwards; }
+
+        .sv-hero-line1 { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.05s; }
+        .sv-hero-line2 { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.15s; }
+        .sv-hero-sub   { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.25s; }
+        .sv-hero-cta   { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.35s; }
+        .sv-hero-stats { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.45s; }
+
+        .sv-btn-primary {
+          background: ${DS.blue}; color: #fff;
+          border: none; border-radius: 12px;
+          padding: 14px 32px;
+          font-family: ${DS.body}; font-weight: 600; font-size: 15px;
+          cursor: pointer; letter-spacing: -0.01em;
+          transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+          box-shadow: 0 2px 16px rgba(10,47,255,0.20);
+        }
+        .sv-btn-primary:hover { background: ${DS.blueDark}; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,47,255,0.28); }
+        .sv-btn-primary:active { transform: scale(0.98); }
+
+        .sv-btn-secondary {
+          background: ${DS.surface}; color: ${DS.text};
+          border: 1px solid ${DS.border}; border-radius: 12px;
+          padding: 14px 32px;
+          font-family: ${DS.body}; font-weight: 500; font-size: 15px;
+          cursor: pointer; letter-spacing: -0.01em;
+          transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+          box-shadow: ${DS.shadowSm};
+        }
+        .sv-btn-secondary:hover { background: ${DS.surfaceWarm}; transform: translateY(-1px); }
+        .sv-btn-secondary:active { transform: scale(0.98); }
+
+        .sv-nav-btn-ghost {
+          background: none; border: none; cursor: pointer;
+          font-family: ${DS.body}; font-size: 14px; font-weight: 500;
+          color: ${DS.textSub}; padding: 6px 12px; border-radius: 8px;
+          transition: color 0.15s, background 0.15s;
+        }
+        .sv-nav-btn-ghost:hover { color: ${DS.text}; background: ${DS.borderLight}; }
+
+        .sv-step:hover .sv-step-num { transform: scale(1.1); background: ${DS.blue}; }
+        .sv-step { transition: all 0.2s; }
+        .sv-step:hover { border-left-color: ${DS.blue} !important; }
+        .sv-step-num { transition: all 0.2s; }
       `}</style>
 
       {/* ───── NAV ───── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-8 py-2.5 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm">
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 28px", height: 60,
+        background: "rgba(245,244,240,0.85)",
+        backdropFilter: "blur(16px)",
+        borderBottom: `1px solid ${DS.border}`,
+      }}>
         <Link href="/">
-          <img src="/logo.png" alt="StreetViz" className="h-[72px] w-auto cursor-pointer" />
+          <img src="/logo.png" alt="StreetViz" style={{ height: 52, width: "auto", cursor: "pointer" }} />
         </Link>
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.push("/login")} className="text-sm text-gray-500 hover:text-gray-900 transition font-medium hidden sm:block">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button className="sv-nav-btn-ghost" onClick={() => router.push("/login")}
+            style={{ display: "none" }} // hidden on mobile, shown via media below
+          >
             Entrar
           </button>
-          <button onClick={() => router.push("/register")} className="text-sm bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 active:scale-95 transition-all font-semibold shadow-sm">
+          <style>{`@media(min-width:640px){ .sv-nav-entrar { display: block !important; } }`}</style>
+          <button className="sv-nav-btn-ghost sv-nav-entrar" onClick={() => router.push("/login")}
+            style={{ display: "none" }}
+          >
+            Entrar
+          </button>
+          <button
+            onClick={() => router.push("/register")}
+            style={{
+              fontFamily: DS.body, fontSize: 14, fontWeight: 600,
+              background: DS.blue, color: "#fff",
+              border: "none", borderRadius: 9,
+              padding: "8px 20px", cursor: "pointer",
+              boxShadow: "0 1px 8px rgba(10,47,255,0.18)",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = DS.blueDark)}
+            onMouseLeave={e => (e.currentTarget.style.background = DS.blue)}
+          >
             Criar conta
           </button>
         </div>
       </nav>
 
       {/* ───── HERO ───── */}
-      <section className="relative pt-48 pb-12 px-6 text-center">
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-blue-100 opacity-50 blur-3xl" />
+      <section style={{
+        paddingTop: 140, paddingBottom: 0,
+        paddingLeft: 24, paddingRight: 24,
+        textAlign: "center",
+        position: "relative",
+      }}>
+        {/* Live badge */}
+        <div className="sv-hero-line1" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: DS.surface, border: `1px solid ${DS.border}`,
+          borderRadius: 20, padding: "5px 14px 5px 10px",
+          marginBottom: 28,
+          boxShadow: DS.shadowSm,
+        }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: "50%", background: "#10B981",
+            display: "inline-block", animation: "sv-pulse 2s ease-in-out infinite",
+          }} />
+          <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textSub, letterSpacing: "0.02em" }}>
+            {loading ? "A carregar…" : `${reportedCount} ocorrências · ${activeCount} ativas agora`}
+          </span>
         </div>
-        <div className="inline-flex items-center gap-2 bg-white border border-blue-100 text-blue-600 text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm mb-8">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
-          Dados em tempo real · Gratuito · Feito por cidadãos
-        </div>
-        <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-5 leading-tight tracking-tight">
-          Se ninguém reportar,<br />
-          <span className="text-blue-600">nada muda.</span>
+
+        {/* Headline */}
+        <h1 className="sv-hero-line2" style={{
+          fontSize: "clamp(40px, 7vw, 72px)",
+          fontWeight: 800,
+          color: DS.text,
+          lineHeight: 1.08,
+          letterSpacing: "-0.03em",
+          marginBottom: 10,
+          maxWidth: 780,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}>
+          A câmara não vai ver o buraco.
+          <br />
+          <span style={{ color: DS.blue }}>Tu viste.</span>
         </h1>
-        <p className="text-lg md:text-xl text-gray-500 max-w-lg mx-auto mb-3 leading-relaxed font-light">
-          Problemas ignorados começam na rua. Ajuda a tornar a tua cidade mais segura — em segundos.
+
+        <p className="sv-hero-sub" style={{
+          fontFamily: DS.body, fontWeight: 300,
+          fontSize: "clamp(16px, 2.5vw, 20px)",
+          color: DS.textSub,
+          maxWidth: 480,
+          margin: "0 auto 36px",
+          lineHeight: 1.6,
+          letterSpacing: "-0.01em",
+        }}>
+          Reporta problemas na tua rua. A comunidade confirma. A câmara resolve.
         </p>
-        <p className="text-sm text-gray-400 mb-10">Começa em menos de 10 segundos. Sem complicações.</p>
-        <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none">
-          <button onClick={() => router.push("/register")} className="w-full sm:w-auto bg-blue-600 text-white px-9 py-4 rounded-2xl hover:bg-blue-700 active:scale-95 transition-all font-bold text-base shadow-lg shadow-blue-200 hover:-translate-y-0.5 duration-300">
-            Criar conta grátis →
+
+        {/* CTAs */}
+        <div className="sv-hero-cta" style={{ display: "flex", flexDirection: "row", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 52 }}>
+          <button className="sv-btn-primary" onClick={() => router.push("/register")}>
+            Entra. É grátis.
           </button>
-          <button onClick={() => router.push("/dashboard")} className="w-full sm:w-auto bg-white/70 backdrop-blur-xl border border-gray-200 text-gray-700 px-9 py-4 rounded-2xl hover:bg-white hover:-translate-y-0.5 active:scale-95 transition-all duration-300 font-semibold text-base shadow-sm">
-            Ver o mapa
+          <button className="sv-btn-secondary" onClick={() => router.push("/dashboard")}>
+            Ver o mapa →
           </button>
         </div>
-        <p className="mt-5 text-sm text-gray-400 sm:hidden">
-          Já tens conta?{" "}
-          <button onClick={() => router.push("/login")} className="text-blue-600 font-semibold">Entrar</button>
-        </p>
       </section>
 
+      {/* ───── TICKER ───── */}
+      {!loading && !error && problems.length > 0 && (
+        <Ticker problems={problems} />
+      )}
+      {loading && (
+        <div style={{ height: 41, background: DS.surfaceWarm, borderTop: `1px solid ${DS.border}`, borderBottom: `1px solid ${DS.border}` }} />
+      )}
+
       {/* ───── DASHBOARD PREVIEW ───── */}
-      <section className="px-6 pb-14 -mt-2">
-        <div className="max-w-[340px] sm:max-w-[420px] md:max-w-[500px] mx-auto">
-          <div className="relative rounded-[18px] overflow-hidden border border-white/80 bg-white shadow-[0_16px_50px_-12px_rgba(59,130,246,0.16)]">
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
-              <span className="w-2 h-2 rounded-full bg-red-400/80" />
-              <span className="w-2 h-2 rounded-full bg-yellow-400/80" />
-              <span className="w-2 h-2 rounded-full bg-green-400/80" />
-              <div className="flex-1 mx-2">
-                <div className="bg-white border border-gray-200 rounded-md px-2 py-1 text-[9px] sm:text-[10px] text-gray-400 font-medium text-center">
+      <section style={{ padding: "48px 24px 0" }}>
+        <div style={{ maxWidth: 500, margin: "0 auto" }}>
+          <div style={{
+            borderRadius: 18, overflow: "hidden",
+            border: `1px solid ${DS.border}`,
+            background: DS.surface,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.12)",
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "10px 14px",
+              background: DS.surfaceWarm,
+              borderBottom: `1px solid ${DS.border}`,
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F87171" }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FCD34D" }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6EE7B7" }} />
+              <div style={{ flex: 1, margin: "0 8px" }}>
+                <div style={{
+                  background: DS.surface, border: `1px solid ${DS.border}`,
+                  borderRadius: 6, padding: "3px 10px",
+                  fontSize: 10, color: DS.textMuted,
+                  fontFamily: DS.mono, textAlign: "center",
+                }}>
                   streetviz.app/dashboard
                 </div>
               </div>
             </div>
-            <img src="/dashboard-preview.jpg" alt="StreetViz Dashboard" className="w-full h-auto block" />
+            <img src="/dashboard-preview.jpg" alt="StreetViz Dashboard" style={{ width: "100%", height: "auto", display: "block" }} />
           </div>
         </div>
       </section>
 
+      {/* ───── COMO FUNCIONA — inline, compact ───── */}
+      <section style={{ padding: "64px 24px 0", maxWidth: 680, margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+          {[
+            { n: "1", title: "Vê o mapa",       desc: "Todos os problemas da tua zona, em tempo real." },
+            { n: "2", title: "Reporta",          desc: "Localização, foto, descrição. Em menos de 30 segundos." },
+            { n: "3", title: "A câmara age",     desc: "Prioridade definida pela comunidade. Não pelo acaso." },
+          ].map((step) => (
+            <div key={step.n} className="sv-step" style={{
+              paddingLeft: 16,
+              borderLeft: `2px solid ${DS.border}`,
+            }}>
+              <div className="sv-step-num" style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: DS.text, color: "#fff",
+                fontSize: 11, fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 10,
+              }}>
+                {step.n}
+              </div>
+              <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 14, color: DS.text, marginBottom: 5, letterSpacing: "-0.01em" }}>
+                {step.title}
+              </p>
+              <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 13, color: DS.textSub, lineHeight: 1.55 }}>
+                {step.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ───── REPORTADO RECENTEMENTE ───── */}
-      <section className="px-6 pb-20">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-5 text-center">
+      <section style={{ padding: "64px 24px 0" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <p style={{
+            fontFamily: DS.mono, fontSize: 10, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: DS.textMuted,
+            marginBottom: 20,
+          }}>
             Reportado recentemente
           </p>
-          <div className="space-y-3">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {loading ? (
-              // ── Skeleton cards ──
               [0, 1].map(i => (
-                <div key={i} className="bg-white/70 border border-gray-100 rounded-2xl p-4 flex items-start gap-4" style={{ boxShadow: DS.shadowSm }}>
-                  <div className="sv-skeleton mt-1.5 flex-shrink-0" style={{ width: 10, height: 10, borderRadius: "50%" }} />
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
+                <div key={i} style={{
+                  background: DS.surface, border: `1px solid ${DS.border}`,
+                  borderRadius: 14, padding: "16px",
+                  display: "flex", alignItems: "flex-start", gap: 14,
+                  boxShadow: DS.shadowSm,
+                }}>
+                  <div className="sv-skeleton" style={{ marginTop: 4, flexShrink: 0, width: 10, height: 10, borderRadius: "50%" }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                       <div className="sv-skeleton" style={{ width: 120, height: 14 }} />
                       <div className="sv-skeleton" style={{ width: 40, height: 14 }} />
-                      <div className="sv-skeleton" style={{ width: 50, height: 14 }} />
                     </div>
-                    <div className="sv-skeleton" style={{ width: "90%", height: 12 }} />
-                    <div className="sv-skeleton" style={{ width: "60%", height: 12 }} />
-                    <div className="sv-skeleton" style={{ width: 140, height: 11 }} />
+                    <div className="sv-skeleton" style={{ width: "85%", height: 12, marginBottom: 6 }} />
+                    <div className="sv-skeleton" style={{ width: "55%", height: 11 }} />
                   </div>
                 </div>
               ))
             ) : error ? (
-              // ── Error banner ──
               <div style={{
                 background: DS.redLight, border: `1px solid ${DS.redBorder}`,
-                borderRadius: 16, padding: "20px 20px",
+                borderRadius: 14, padding: "20px",
                 display: "flex", alignItems: "flex-start", gap: 14,
               }}>
                 <div style={{
@@ -497,19 +696,19 @@ export default function Home() {
                     Não foi possível carregar as ocorrências
                   </p>
                   <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 13, color: "#B91C1C", lineHeight: 1.6 }}>
-                    Verifica a tua ligação à internet e{" "}
-                    <button
-                      onClick={() => window.location.reload()}
-                      style={{ color: DS.red, fontWeight: 600, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontFamily: DS.body, fontSize: 13, padding: 0 }}
-                    >
-                      tenta novamente
-                    </button>
-                    .
+                    Verifica a tua ligação e{" "}
+                    <button onClick={() => window.location.reload()} style={{
+                      color: DS.red, fontWeight: 600, textDecoration: "underline",
+                      background: "none", border: "none", cursor: "pointer",
+                      fontFamily: DS.body, fontSize: 13, padding: 0,
+                    }}>tenta novamente</button>.
                   </p>
                 </div>
               </div>
             ) : recentProblems.length === 0 ? (
-              <div className="text-center text-sm text-gray-400 py-6">Ainda não há ocorrências reportadas.</div>
+              <p style={{ fontFamily: DS.body, fontSize: 14, color: DS.textMuted, textAlign: "center", padding: "24px 0" }}>
+                Ainda não há ocorrências reportadas.
+              </p>
             ) : recentProblems.map((item) => {
               const catCfg  = CAT_CFG[item.categoria ?? "outro"];
               const sColor  = sevColor(item.gravidade);
@@ -518,23 +717,29 @@ export default function Home() {
               return (
                 <div
                   key={item.id}
+                  className="sv-marker-card"
                   onClick={() => openSheet(item)}
-                  className="sv-marker-card bg-white/70 backdrop-blur-xl border border-gray-100 rounded-2xl p-4 flex items-start gap-4 cursor-pointer transition-all duration-300"
-                  style={{ boxShadow: DS.shadowSm }}
+                  style={{
+                    background: DS.surface, border: `1px solid ${DS.border}`,
+                    borderRadius: 14, padding: "16px",
+                    display: "flex", alignItems: "flex-start", gap: 14,
+                    cursor: "pointer", transition: "all 0.2s",
+                    boxShadow: DS.shadowSm,
+                  }}
                 >
-                  <span style={{ marginTop: 6, width: 10, height: 10, borderRadius: "50%", flexShrink: 0, background: sColor, display: "inline-block" }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 14, color: DS.text }}>{item.name}</p>
-                      <span style={{ fontFamily: DS.mono, fontSize: 9, fontWeight: 500, color: sColor, background: sBg, border: `1px solid ${sBorder}`, borderRadius: 4, padding: "1px 6px" }}>
-                        {sevLabel(item.gravidade)}
+                  <span style={{ marginTop: 5, width: 10, height: 10, borderRadius: "50%", flexShrink: 0, background: sColor, display: "inline-block" }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap", marginBottom: 5 }}>
+                      <span style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 14, color: DS.text, letterSpacing: "-0.01em" }}>
+                        {item.name}
                       </span>
-                      <span style={{ fontFamily: DS.mono, fontSize: 9, fontWeight: 500, color: catCfg.color, background: catCfg.bg, border: `1px solid ${catCfg.border}`, borderRadius: 4, padding: "1px 6px" }}>
-                        {catCfg.label}
-                      </span>
+                      <Badge label={sevLabel(item.gravidade)} color={sColor} bg={sBg} border={sBorder} />
+                      <Badge label={catCfg.label} color={catCfg.color} bg={catCfg.bg} border={catCfg.border} />
                     </div>
-                    <p style={{ fontFamily: DS.body, color: DS.textSub, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>{item.description}</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>
+                    <p style={{ fontFamily: DS.body, color: DS.textSub, fontSize: 12.5, lineHeight: 1.6, marginBottom: 7 }}>
+                      {item.description}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>
                       {item.location && <span>{item.location}</span>}
                       {item.location && <span>·</span>}
                       <span>{item.confirmacoes} confirmação{item.confirmacoes !== 1 ? "ões" : ""}</span>
@@ -545,143 +750,197 @@ export default function Home() {
               );
             })}
           </div>
-          <div className="text-center mt-5">
-            <button onClick={() => router.push("/dashboard")} className="text-blue-600 text-sm font-semibold hover:underline">
+          <div style={{ textAlign: "center", marginTop: 18 }}>
+            <button onClick={() => router.push("/dashboard")} style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: DS.body, fontSize: 14, fontWeight: 600,
+              color: DS.blue, letterSpacing: "-0.01em",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            >
               Ver todos no mapa →
             </button>
           </div>
         </div>
       </section>
 
-      {/* ───── MAPA LEAFLET ───── */}
-      <section className="px-6 pb-20">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">O mapa da tua cidade</h2>
-          <p className="text-gray-400 text-sm text-center mb-5">
-            Todos os problemas, num só lugar. Clica num marcador para ver os detalhes.
-          </p>
-          <div className="flex items-center justify-center gap-5 mb-5 flex-wrap">
-            {[
-              { color: "#ef4444", label: "Alto"  },
-              { color: "#f97316", label: "Médio" },
-              { color: "#10b981", label: "Baixo" },
-            ].map(({ color, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block" }} />
-                {label}
-              </div>
-            ))}
-            {loading ? (
-              <div className="sv-skeleton" style={{ width: 80, height: 22, borderRadius: 20 }} />
-            ) : (
-            <div style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textSub, background: DS.blueLight, border: `1px solid ${DS.blueBorder}`, borderRadius: 20, padding: "2px 10px" }}>
-              {problems.filter(p => p.latitude && p.longitude).length} ocorrência{problems.filter(p => p.latitude && p.longitude).length !== 1 ? "s" : ""}
+      {/* ───── MAPA ───── */}
+      <section style={{ padding: "64px 0 0" }}>
+        <div style={{ maxWidth: "100%", margin: "0 auto" }}>
+          <div style={{ padding: "0 24px", marginBottom: 20, display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, maxWidth: 1100, margin: "0 auto 20px" }}>
+            <div>
+              <h2 style={{ fontFamily: DS.body, fontWeight: 700, fontSize: "clamp(22px, 4vw, 30px)", color: DS.text, letterSpacing: "-0.025em", marginBottom: 4 }}>
+                O mapa da tua cidade
+              </h2>
+              <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 14, color: DS.textSub }}>
+                Clica num marcador para ver os detalhes.
+              </p>
             </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              {[
+                { color: DS.red,   label: "Alto"  },
+                { color: DS.amber, label: "Médio" },
+                { color: DS.green, label: "Baixo" },
+              ].map(({ color, label }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: DS.mono, fontSize: 11, color: DS.textSub }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
+                  {label}
+                </div>
+              ))}
+              {!loading && (
+                <div style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textSub, background: DS.blueLight, border: `1px solid ${DS.blueBorder}`, borderRadius: 20, padding: "2px 10px" }}>
+                  {problems.filter(p => p.latitude && p.longitude).length} ocorrência{problems.filter(p => p.latitude && p.longitude).length !== 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="rounded-3xl overflow-hidden border border-gray-200 shadow-xl" style={{ height: 420, position: "relative" }}>
+
+          {/* Full-width map */}
+          <div style={{ height: 460, position: "relative", borderTop: `1px solid ${DS.border}`, borderBottom: `1px solid ${DS.border}` }}>
             <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
             {error ? (
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FEF2F2", pointerEvents: "none", gap: 10 }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: DS.redLight, pointerEvents: "none", gap: 10 }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={DS.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.red }}>Erro ao carregar o mapa</span>
               </div>
             ) : (mapLoading || (problems.length === 0 && loading)) && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#F8F9FB", pointerEvents: "none", gap: 12 }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: DS.bg, pointerEvents: "none", gap: 12 }}>
                 <div className="sv-spinner" />
-                <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>A carregar mapa...</span>
+                <span style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>A carregar mapa…</span>
               </div>
             )}
           </div>
-          <div className="text-center mt-5">
-            <button onClick={() => router.push("/dashboard")} className="text-blue-600 text-sm font-semibold hover:underline">
+
+          <div style={{ textAlign: "center", padding: "18px 0 0" }}>
+            <button onClick={() => router.push("/dashboard")} style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: DS.body, fontSize: 14, fontWeight: 600,
+              color: DS.blue,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            >
               Abrir mapa completo →
             </button>
           </div>
         </div>
       </section>
 
-      {/* ───── COMO FUNCIONA ───── */}
-      <section className="py-20 px-6 bg-white">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Como funciona</h2>
-        <p className="text-center text-gray-400 mb-14 text-sm">Simples. Direto. Eficaz.</p>
-        <div className="grid md:grid-cols-3 gap-10 max-w-4xl mx-auto">
-          {[
-            { n: "1", title: "Explora o mapa",                   desc: "Vê todos os problemas reportados perto de ti, em tempo real." },
-            { n: "2", title: "Reporta em segundos",              desc: "Adiciona uma ocorrência com localização, foto e descrição." },
-            { n: "3", title: "Problemas resolvidos mais rápido", desc: "A câmara municipal recebe alertas e resolve com base na prioridade da comunidade." },
-          ].map((step) => (
-            <div key={step.n} className="relative pl-7 border-l-2 border-blue-100 hover:border-blue-400 transition-colors duration-300 group">
-              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                {step.n}
-              </span>
-              <h3 className="font-bold text-gray-900 mb-2 mt-0.5">{step.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ───── CTA FINAL — dark section ───── */}
+      <section style={{
+        marginTop: 80,
+        background: DS.dark,
+        padding: "80px 24px",
+        textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* subtle grid texture */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.04,
+          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
 
-      {/* ───── CTA FINAL ───── */}
-      <section className="py-24 px-6 bg-blue-600 text-white text-center relative overflow-hidden">
-        <h2 className="text-4xl font-extrabold mb-3 tracking-tight">Junta-te à vizinhança</h2>
-        <p className="text-blue-100 mb-2 text-lg">A tua cidade precisa de ti. Começa hoje.</p>
-        <p className="text-blue-200 text-sm mb-10">Sem complicações. Apenas entra e explora.</p>
-        <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none">
-          <button onClick={() => router.push("/register")} className="w-full sm:w-auto bg-white text-blue-600 px-9 py-4 rounded-2xl font-bold hover:bg-gray-50 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 shadow-lg text-base">
+        <p style={{ fontFamily: DS.mono, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4A5568", marginBottom: 24 }}>
+          Junta-te à vizinhança
+        </p>
+        <h2 style={{
+          fontFamily: DS.body, fontWeight: 800,
+          fontSize: "clamp(32px, 6vw, 56px)",
+          color: "#FFFFFF",
+          letterSpacing: "-0.03em",
+          lineHeight: 1.1,
+          marginBottom: 16,
+          maxWidth: 560,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}>
+          A tua cidade<br />precisa de ti.
+        </h2>
+        <p style={{ fontFamily: DS.body, fontWeight: 300, fontSize: 17, color: "#8892A4", marginBottom: 40, letterSpacing: "-0.01em" }}>
+          Sem complicações. Entra e explora.
+        </p>
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+          <button
+            onClick={() => router.push("/register")}
+            style={{
+              background: "#FFFFFF", color: DS.dark,
+              border: "none", borderRadius: 12,
+              padding: "14px 36px",
+              fontFamily: DS.body, fontWeight: 700, fontSize: 15,
+              cursor: "pointer", letterSpacing: "-0.01em",
+              transition: "background 0.15s, transform 0.15s",
+              boxShadow: "0 2px 20px rgba(255,255,255,0.10)",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#F0EFE9"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
             Criar conta grátis →
           </button>
-          <button onClick={() => router.push("/dashboard")} className="w-full sm:w-auto bg-blue-800 text-white px-9 py-4 rounded-2xl font-semibold hover:bg-blue-900 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 text-base">
+          <button
+            onClick={() => router.push("/dashboard")}
+            style={{
+              background: DS.darkSub, color: "#CBD5E0",
+              border: `1px solid ${DS.darkBorder}`, borderRadius: 12,
+              padding: "14px 32px",
+              fontFamily: DS.body, fontWeight: 500, fontSize: 15,
+              cursor: "pointer", letterSpacing: "-0.01em",
+              transition: "background 0.15s, transform 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#242B45"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = DS.darkSub; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
             Ver o mapa
           </button>
         </div>
       </section>
 
       {/* ───── FOOTER ───── */}
-      <footer className="bg-white border-t border-gray-100">
-        <div className="max-w-4xl mx-auto px-6 py-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
+      <footer style={{ background: DS.surface, borderTop: `1px solid ${DS.border}` }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap", marginBottom: 32 }}>
             <div>
-              <img src="/logo.png" alt="StreetViz" className="h-10 w-auto mb-1" />
-              <p className="text-xs text-gray-400 font-light">Feito por cidadãos, para cidadãos.</p>
+              <img src="/logo.png" alt="StreetViz" style={{ height: 40, width: "auto", marginBottom: 6 }} />
+              <p style={{ fontFamily: DS.body, fontWeight: 300, fontSize: 12, color: DS.textMuted }}>Feito por cidadãos, para cidadãos.</p>
             </div>
-            <div className="flex flex-col gap-1.5 text-sm text-gray-500">
-              <a href="mailto:histreetviz@gmail.com" className="sv-footer-link flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <a href="mailto:histreetviz@gmail.com" className="sv-footer-link" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
                 histreetviz@gmail.com
               </a>
-              <a href="tel:+351964221091" className="sv-footer-link flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <a href="tel:+351964221091" className="sv-footer-link" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.64 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
                 964 221 091
               </a>
             </div>
           </div>
-          <div className="border-t border-gray-100 mb-6" />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">
+          <div style={{ borderTop: `1px solid ${DS.borderLight}`, paddingTop: 20, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <p style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>
               © {new Date().getFullYear()} StreetViz. Todos os direitos reservados.
             </p>
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <Link href="/terms" className="sv-footer-link">Termos e Condições</Link>
-              <span className="mx-2 text-gray-200">|</span>
-              <Link href="/privacy" className="sv-footer-link">Política de Privacidade</Link>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Link href="/terms" className="sv-footer-link" style={{ fontSize: 12 }}>Termos e Condições</Link>
+              <span style={{ color: DS.borderLight }}>|</span>
+              <Link href="/privacy" className="sv-footer-link" style={{ fontSize: 12 }}>Política de Privacidade</Link>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* ───── TOAST ERRO DE REDE ───── */}
+      {/* ───── TOAST ───── */}
       {toast && (
         <div className="sv-toast" style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
           zIndex: 950, width: "calc(100% - 32px)", maxWidth: 420,
-          background: "#111827", borderRadius: 12,
+          background: DS.dark, borderRadius: 12,
           boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
           padding: "14px 16px",
           display: "flex", alignItems: "center", gap: 12,
@@ -696,19 +955,12 @@ export default function Home() {
             </svg>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13, color: "#F9FAFB", marginBottom: 2 }}>
-              Erro de ligação
-            </p>
+            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13, color: "#F9FAFB", marginBottom: 2 }}>Erro de ligação</p>
             <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 12, color: "#9CA3AF", lineHeight: 1.5 }}>
               Não foi possível ligar ao servidor. Verifica a tua internet.
             </p>
           </div>
-          <button
-            onClick={() => setToast(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", fontSize: 18, lineHeight: 1, flexShrink: 0, padding: 4 }}
-          >
-            ×
-          </button>
+          <button onClick={() => setToast(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", fontSize: 18, lineHeight: 1, flexShrink: 0, padding: 4 }}>×</button>
         </div>
       )}
 
@@ -780,7 +1032,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => router.push("/dashboard")}
-                    style={{ width: "100%", padding: "13px 0", fontFamily: DS.body, fontSize: 14, fontWeight: 600, background: DS.blue, color: "#fff", border: "none", borderRadius: DS.rMd, cursor: "pointer", letterSpacing: "-0.01em", boxShadow: "0 2px 12px rgba(26,86,219,0.22)", transition: DS.trans }}
+                    style={{ width: "100%", padding: "13px 0", fontFamily: DS.body, fontSize: 14, fontWeight: 600, background: DS.blue, color: "#fff", border: "none", borderRadius: DS.rMd, cursor: "pointer", letterSpacing: "-0.01em", boxShadow: "0 2px 12px rgba(10,47,255,0.22)", transition: DS.trans }}
                   >
                     Ver no mapa completo →
                   </button>
