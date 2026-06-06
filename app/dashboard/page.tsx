@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -45,13 +46,13 @@ interface Notification {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DESIGN TOKENS
+// DESIGN TOKENS — Landing page style
 // ─────────────────────────────────────────────────────────────────────────────
 const DS = {
-  blue:        '#1A56DB',
-  blueDark:    '#1648C0',
-  blueLight:   '#EFF6FF',
-  blueBorder:  '#BFDBFE',
+  blue:        '#0A2FFF',
+  blueDark:    '#0822D4',
+  blueLight:   '#EEF2FF',
+  blueBorder:  '#C7D2FE',
   red:         '#DC2626',
   redLight:    '#FEF2F2',
   redBorder:   '#FCA5A5',
@@ -61,27 +62,27 @@ const DS = {
   green:       '#059669',
   greenLight:  '#ECFDF5',
   greenBorder: '#6EE7B7',
-  bg:          '#F7F8FA',
+  bg:          '#F5F4F0',
   surface:     '#FFFFFF',
-  border:      '#E4E6EB',
-  borderLight: '#F0F1F5',
+  surfaceWarm: '#FAFAF8',
+  border:      '#E8E7E2',
+  borderLight: '#F0EFE9',
   text:        '#0D1117',
-  textSub:     '#4B5563',
-  textMuted:   '#9CA3AF',
-  textFaint:   '#C4C9D4',
-  // Font stack — Instrument Sans + IBM Plex Mono
-  sans:        "'Instrument Sans', system-ui, sans-serif",
-  mono:        "'IBM Plex Mono', 'Fira Code', monospace",
-  // Radii — tight and intentional
-  r2:          2,
-  r4:          4,
-  r6:          6,
-  r8:          8,
-  shadowSm:    '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
-  shadowMd:    '0 4px 16px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04)',
-  shadowLg:    '0 12px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.05)',
-  trans:       'all 0.15s ease',
-  transFast:   'all 0.1s ease',
+  textSub:     '#5C6070',
+  textMuted:   '#9098A8',
+  textFaint:   '#B8BFCC',
+  dark:        '#0A0F1E',
+  darkSub:     '#1A2035',
+  darkBorder:  '#2A3050',
+  mono:        "'DM Mono', monospace",
+  body:        "'Inter', sans-serif",
+  rSm:         8,
+  rMd:         10,
+  rLg:         14,
+  shadowSm:    '0 1px 4px rgba(0,0,0,0.05)',
+  shadowMd:    '0 4px 20px rgba(0,0,0,0.07)',
+  shadowLg:    '0 8px 40px rgba(0,0,0,0.10)',
+  trans:       'all 0.18s ease',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,7 +106,7 @@ const STRINGS = {
     subHighRisk:      'alto risco',
     searchPh:         'Pesquisar…',
     radiusLabel:      'Raio',
-    radiusClear:      'Limpar raio',
+    radiusClear:      'Limpar',
     sevAll:           'Todos',
     sevHigh:          'Alto',
     sevMed:           'Médio',
@@ -227,7 +228,7 @@ const STRINGS = {
     subHighRisk:      'high risk',
     searchPh:         'Search…',
     radiusLabel:      'Radius',
-    radiusClear:      'Clear radius',
+    radiusClear:      'Clear',
     sevAll:           'All',
     sevHigh:          'High',
     sevMed:           'Medium',
@@ -492,7 +493,7 @@ function StatusDot({ color, pulse = false }: { color: string; pulse?: boolean })
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INLINE BADGE — used sparingly, only for status/category info
+// BADGE — landing page style
 // ─────────────────────────────────────────────────────────────────────────────
 function Tag({ label, color, bg, border }: { label: string; color: string; bg: string; border: string }) {
   return (
@@ -503,7 +504,7 @@ function Tag({ label, color, bg, border }: { label: string; color: string; bg: s
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FILTER ROW — Linear-style: label left, control right
+// FILTER ROW
 // ─────────────────────────────────────────────────────────────────────────────
 interface FilterRowProps {
   label:    string
@@ -519,7 +520,7 @@ function FilterRow({ label, children }: FilterRowProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEGMENT — replaces pill buttons in filter rows
+// SEGMENT
 // ─────────────────────────────────────────────────────────────────────────────
 interface SegmentProps {
   options:  { value: string; label: string; dot?: string }[]
@@ -1109,7 +1110,6 @@ export default function DashboardPage() {
         <p className="sv-panel-sub">{t.analyticsDesc}</p>
       </div>
 
-      {/* KPI row */}
       <div className="sv-kpi-row">
         {[
           { label: t.statTotal,      value: problems.length,                                          color: DS.blue,  trend: '+12%' },
@@ -1128,7 +1128,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts row */}
       <div className="sv-charts-row">
         <div className="sv-chart-card">
           <div className="sv-chart-title">{t.weeklyTitle}</div>
@@ -1158,7 +1157,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Hourly heatmap */}
       <div className="sv-chart-card">
         <div className="sv-chart-title">{t.heatmapTitle}</div>
         <div className="sv-heatmap">
@@ -1172,7 +1170,7 @@ export default function DashboardPage() {
                   className="sv-heatmap-bar"
                   style={{
                     height: `${pct * 85 + 5}%`,
-                    background: isActive ? DS.blue : `rgba(26,86,219,${pct * 0.7 + 0.1})`,
+                    background: isActive ? DS.blue : `rgba(10,47,255,${pct * 0.7 + 0.1})`,
                     outline: isActive ? `2px solid ${DS.blue}` : 'none',
                     outlineOffset: 1,
                   }}
@@ -1186,7 +1184,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Severity + Resolution */}
       <div className="sv-charts-row">
         <div className="sv-chart-card">
           <div className="sv-chart-title">{t.statsBySev}</div>
@@ -1216,7 +1213,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Top categories table */}
       <div className="sv-table-card">
         <div className="sv-table-head">{t.topAreas}</div>
         {(Object.keys(CAT_CFG) as Categoria[])
@@ -1248,7 +1244,6 @@ export default function DashboardPage() {
         <p className="sv-panel-sub">{t.reportsDesc}</p>
       </div>
 
-      {/* Period selector */}
       <div className="sv-chart-card">
         <FieldLabel>{t.reportPeriod}</FieldLabel>
         <div className="sv-period-row">
@@ -1261,7 +1256,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Report stats */}
       <div className="sv-report-stats">
         {[
           { label: t.statTotal,        value: filteredForReport.length,                                           color: DS.blue  },
@@ -1275,7 +1269,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Export */}
       <div className="sv-chart-card">
         <FieldLabel>Export</FieldLabel>
         <div className="sv-export-row">
@@ -1297,7 +1290,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Report list */}
       <div className="sv-table-card">
         <div className="sv-table-head">{filteredForReport.length} {t.subProblems}</div>
         <div className="sv-report-list">
@@ -1326,7 +1318,6 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────
   const SidebarContent = (
     <>
-      {/* View tabs */}
       <div className="sv-tabs">
         {([['todos', t.tabAll], ['meus', t.tabMine]] as [ViewMode, string][]).map(([k, label]) => (
           <button key={k} onClick={() => setViewMode(k)} className={`sv-tab${viewMode === k ? ' active' : ''}`}>
@@ -1335,7 +1326,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Stats row */}
       <div className="sv-stats-row">
         {[
           { label: t.statTotal, value: filtered.length,  sub: t.subProblems, color: DS.text  },
@@ -1350,9 +1340,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Filters — Linear-style toggle rows */}
       <div className="sv-filters-block">
-        {/* Search */}
         <div className="sv-search-wrap">
           <svg className="sv-search-icon" width="12" height="12" viewBox="0 0 16 16" fill="none">
             <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
@@ -1376,11 +1364,7 @@ export default function DashboardPage() {
         </FilterRow>
 
         <FilterRow label={t.category}>
-          <select
-            className="sv-select"
-            value={catFilter}
-            onChange={e => setCatFilter(e.target.value as Categoria | 'all')}
-          >
+          <select className="sv-select" value={catFilter} onChange={e => setCatFilter(e.target.value as Categoria | 'all')}>
             <option value="all">{t.catAll}</option>
             {(Object.keys(CAT_CFG) as Categoria[]).map(cat => (
               <option key={cat} value={cat}>{catLabel(cat)}</option>
@@ -1389,11 +1373,7 @@ export default function DashboardPage() {
         </FilterRow>
 
         <FilterRow label={t.status}>
-          <select
-            className="sv-select"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as Status | 'all')}
-          >
+          <select className="sv-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value as Status | 'all')}>
             <option value="all">{t.statusAll}</option>
             <option value="ativo">{t.statusAtivo}</option>
             <option value="em_analise">{t.statusEmAnalise}</option>
@@ -1438,15 +1418,14 @@ export default function DashboardPage() {
             value={sortKey}
             onChange={v => setSortKey(v as SortKey)}
             options={[
-              { value: 'recente',     label: lang === 'pt' ? 'Recente' : 'Recent'  },
-              { value: 'gravidade',   label: lang === 'pt' ? 'Grav.' : 'Sev.'      },
-              { value: 'confirmacoes', label: lang === 'pt' ? 'Conf.' : 'Conf.'    },
+              { value: 'recente',      label: lang === 'pt' ? 'Recente' : 'Recent' },
+              { value: 'gravidade',    label: lang === 'pt' ? 'Grav.'   : 'Sev.'   },
+              { value: 'confirmacoes', label: lang === 'pt' ? 'Conf.'   : 'Conf.'  },
             ]}
           />
         </FilterRow>
       </div>
 
-      {/* List */}
       <div className="sv-list">
         {loadingData && [1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
 
@@ -1580,13 +1559,13 @@ export default function DashboardPage() {
     <div className="sv-root">
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
         /* ── Reset & Base ─────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 3px; height: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #DDE0E7; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #D8D6D0; border-radius: 2px; }
 
         /* ── Animations ───────────────────────────────────────── */
         @keyframes sv-shimmer  { 0%,100%{opacity:1} 50%{opacity:0.45} }
@@ -1602,73 +1581,76 @@ export default function DashboardPage() {
         /* ── Root layout ──────────────────────────────────────── */
         .sv-root {
           display: flex; flex-direction: column; height: 100dvh;
-          font-family: 'Instrument Sans', system-ui, sans-serif;
-          background: #F7F8FA; color: #0D1117;
+          font-family: 'Inter', system-ui, sans-serif;
+          background: #F5F4F0; color: #0D1117;
           -webkit-font-smoothing: antialiased;
         }
 
         /* ── Topbar ───────────────────────────────────────────── */
         .sv-topbar {
           display: flex; align-items: center; gap: 12px;
-          height: 52px; padding: 0 20px;
-          background: #fff; border-bottom: 1px solid #E4E6EB;
+          height: 56px; padding: 0 20px;
+          background: rgba(245,244,240,0.88);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-bottom: 1px solid #E8E7E2;
           flex-shrink: 0; z-index: 50;
         }
         .sv-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .sv-logo-mark {
-          width: 32px; height: 32px; border-radius: 6px; overflow: hidden;
+          width: 34px; height: 34px; border-radius: 8px; overflow: hidden;
           display: flex; align-items: center; justify-content: center;
-          background: #F7F8FA; border: 1px solid #E4E6EB; flex-shrink: 0;
+          background: #F5F4F0; border: 1px solid #E8E7E2; flex-shrink: 0;
         }
-        .sv-logo-mark img { height: 32px; display: block; }
+        .sv-logo-mark img { height: 34px; display: block; }
         .sv-logo-name {
-          font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;
+          font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500;
           letter-spacing: -0.01em; color: #0D1117; line-height: 1;
         }
-        .sv-logo-name span { color: #1A56DB; }
-        .sv-logo-sub { font-size: 9px; color: #C4C9D4; letter-spacing: 0.07em; margin-top: 1px; font-family: 'IBM Plex Mono', monospace; }
+        .sv-logo-name span { color: #0A2FFF; }
+        .sv-logo-sub { font-size: 9px; color: #B8BFCC; letter-spacing: 0.07em; margin-top: 1px; font-family: 'DM Mono', monospace; }
 
         /* ── Nav tabs (topbar) ────────────────────────────────── */
         .sv-nav { flex: 1; display: flex; justify-content: center; }
         .sv-nav-inner {
-          display: flex; gap: 1px; background: #F7F8FA;
-          border: 1px solid #E4E6EB; border-radius: 6px; padding: 2px;
+          display: flex; gap: 1px; background: #F5F4F0;
+          border: 1px solid #E8E7E2; border-radius: 9px; padding: 2px;
         }
         .sv-nav-btn {
-          font-family: 'Instrument Sans', sans-serif; font-size: 13px; font-weight: 400;
-          padding: 5px 16px; border: none; border-radius: 4px;
-          cursor: pointer; background: transparent; color: #4B5563;
-          transition: all 0.1s ease; letter-spacing: -0.01em;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400;
+          padding: 5px 18px; border: none; border-radius: 7px;
+          cursor: pointer; background: transparent; color: #5C6070;
+          transition: all 0.15s ease; letter-spacing: -0.01em;
         }
-        .sv-nav-btn.active { background: #1A56DB; color: #fff; font-weight: 500; }
-        .sv-nav-btn:not(.active):hover { background: #F0F1F5; }
+        .sv-nav-btn.active { background: #0A2FFF; color: #fff; font-weight: 600; }
+        .sv-nav-btn:not(.active):hover { background: #EDE9E3; color: #0D1117; }
 
         /* ── Topbar right ─────────────────────────────────────── */
         .sv-topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
         .sv-lang-switch {
-          display: flex; gap: 1px; background: #F7F8FA;
-          border: 1px solid #E4E6EB; border-radius: 4px; padding: 1px;
+          display: flex; gap: 1px; background: #F5F4F0;
+          border: 1px solid #E8E7E2; border-radius: 8px; padding: 1px;
         }
         .sv-lang-btn {
-          font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
-          padding: 3px 7px; border: none; border-radius: 3px; cursor: pointer;
-          background: transparent; color: #9CA3AF; transition: all 0.1s;
+          font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 400;
+          padding: 3px 8px; border: none; border-radius: 6px; cursor: pointer;
+          background: transparent; color: #9098A8; transition: all 0.12s;
         }
-        .sv-lang-btn.active { background: #fff; color: #0D1117; font-weight: 500; }
+        .sv-lang-btn.active { background: #fff; color: #0D1117; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
         .sv-status-badge {
-          display: flex; align-items: center; gap: 5px;
-          font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #059669;
-          background: #ECFDF5; border-radius: 4px; padding: 4px 9px;
+          display: flex; align-items: center; gap: 6px;
+          font-family: 'DM Mono', monospace; font-size: 10px; color: #059669;
+          background: #ECFDF5; border-radius: 20px; padding: 4px 10px;
           border: 1px solid #6EE7B7; letter-spacing: 0.01em;
         }
         .sv-report-btn {
-          font-family: 'Instrument Sans', sans-serif; font-size: 13px; font-weight: 600;
-          padding: 6px 14px; background: #1A56DB; color: #fff;
-          border: none; border-radius: 6px; cursor: pointer;
-          transition: all 0.1s; letter-spacing: -0.01em;
-          box-shadow: 0 1px 3px rgba(26,86,219,0.25);
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+          padding: 7px 16px; background: #0A2FFF; color: #fff;
+          border: none; border-radius: 9px; cursor: pointer;
+          transition: all 0.15s; letter-spacing: -0.01em;
+          box-shadow: 0 2px 12px rgba(10,47,255,0.22);
         }
-        .sv-report-btn:hover { background: #1648C0; }
+        .sv-report-btn:hover { background: #0822D4; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(10,47,255,0.28); }
 
         /* ── Body ─────────────────────────────────────────────── */
         .sv-body { display: flex; flex: 1; min-height: 0; position: relative; }
@@ -1676,7 +1658,7 @@ export default function DashboardPage() {
         /* ── Sidebar ──────────────────────────────────────────── */
         .sv-sidebar {
           width: 360px; flex-shrink: 0;
-          background: #fff; border-right: 1px solid #E4E6EB;
+          background: #FAFAF8; border-right: 1px solid #E8E7E2;
           display: flex; flex-direction: column; overflow: hidden;
           transition: width 0.22s ease;
         }
@@ -1684,164 +1666,153 @@ export default function DashboardPage() {
         .sv-sidebar-toggle {
           position: absolute; left: 360px; top: 50%; transform: translateY(-50%);
           z-index: 300; width: 18px; height: 40px;
-          background: #fff; border: 1px solid #E4E6EB; border-left: none;
-          border-radius: 0 4px 4px 0; cursor: pointer;
+          background: #FAFAF8; border: 1px solid #E8E7E2; border-left: none;
+          border-radius: 0 8px 8px 0; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          color: #9CA3AF; transition: left 0.22s ease;
+          color: #9098A8; transition: left 0.22s ease;
         }
         .sv-sidebar-toggle.collapsed { left: 0; }
-        .sv-sidebar-toggle:hover { background: #F7F8FA; }
+        .sv-sidebar-toggle:hover { background: #F0EFE9; }
 
         /* ── Tabs ─────────────────────────────────────────────── */
-        .sv-tabs { display: flex; border-bottom: 1px solid #E4E6EB; flex-shrink: 0; }
+        .sv-tabs { display: flex; border-bottom: 1px solid #E8E7E2; flex-shrink: 0; padding: 0 4px; }
         .sv-tab {
-          flex: 1; font-family: 'Instrument Sans', sans-serif; font-size: 13px;
-          padding: 10px 0; border: none; background: transparent;
-          cursor: pointer; color: #9CA3AF; letter-spacing: -0.01em;
+          flex: 1; font-family: 'Inter', sans-serif; font-size: 13px;
+          padding: 11px 0; border: none; background: transparent;
+          cursor: pointer; color: #9098A8; letter-spacing: -0.01em;
           border-bottom: 2px solid transparent; margin-bottom: -1px;
-          transition: all 0.1s;
+          transition: all 0.12s; font-weight: 400;
         }
-        .sv-tab.active { color: #1A56DB; border-bottom-color: #1A56DB; font-weight: 500; }
+        .sv-tab.active { color: #0A2FFF; border-bottom-color: #0A2FFF; font-weight: 600; }
 
         /* ── Stats ────────────────────────────────────────────── */
-        .sv-stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; flex-shrink: 0; }
-        .sv-stat { padding: 11px 10px 9px; }
-        .sv-stat-label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 8px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: #C4C9D4; margin-bottom: 3px; }
-        .sv-stat-num { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 500; line-height: 1; }
-        .sv-stat-sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #C4C9D4; margin-top: 2px; }
+        .sv-stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; flex-shrink: 0; background: #fff; border-bottom: 1px solid #E8E7E2; }
+        .sv-stat { padding: 12px 12px 10px; }
+        .sv-stat-label { display: block; font-family: 'DM Mono', monospace; font-size: 8px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: #B8BFCC; margin-bottom: 4px; }
+        .sv-stat-num { display: block; font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; line-height: 1; }
+        .sv-stat-sub { display: block; font-family: 'DM Mono', monospace; font-size: 9px; color: #B8BFCC; margin-top: 2px; }
 
         /* ── Filters block ────────────────────────────────────── */
         .sv-filters-block {
-          padding: 8px 12px; border-bottom: 1px solid #E4E6EB;
+          padding: 10px 12px; border-bottom: 1px solid #E8E7E2;
           display: flex; flex-direction: column; gap: 0; flex-shrink: 0;
-          background: #fff;
+          background: #FAFAF8;
         }
 
         /* ── Search ───────────────────────────────────────────── */
-        .sv-search-wrap {
-          position: relative; margin-bottom: 8px;
-        }
-        .sv-search-icon {
-          position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-          color: #C4C9D4; pointer-events: none;
-        }
+        .sv-search-wrap { position: relative; margin-bottom: 8px; }
+        .sv-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #B8BFCC; pointer-events: none; }
         .sv-search-input {
-          width: 100%; font-family: 'Instrument Sans', sans-serif; font-size: 13px;
-          padding: 7px 30px 7px 28px; border: 1px solid #E4E6EB; border-radius: 4px;
-          background: #F7F8FA; color: #0D1117; outline: none;
-          transition: border-color 0.1s, background 0.1s; letter-spacing: -0.01em;
+          width: 100%; font-family: 'Inter', sans-serif; font-size: 13px;
+          padding: 8px 30px 8px 30px; border: 1px solid #E8E7E2; border-radius: 8px;
+          background: #fff; color: #0D1117; outline: none;
+          transition: border-color 0.12s, box-shadow 0.12s; letter-spacing: -0.01em;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
-        .sv-search-input:focus { border-color: #1A56DB; background: #fff; }
-        .sv-search-input::placeholder { color: #C4C9D4; }
-        .sv-search-clear {
-          position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-          background: none; border: none; cursor: pointer; color: #9CA3AF;
-          font-size: 16px; line-height: 1; padding: 0;
-        }
+        .sv-search-input:focus { border-color: #0A2FFF; box-shadow: 0 0 0 3px rgba(10,47,255,0.08); }
+        .sv-search-input::placeholder { color: #B8BFCC; }
+        .sv-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9098A8; font-size: 16px; line-height: 1; padding: 0; }
 
-        /* ── Filter row (Linear-style) ────────────────────────── */
+        /* ── Filter row ───────────────────────────────────────── */
         .sv-filter-row {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 6px 0; border-bottom: 1px solid #F0F1F5; gap: 8px;
+          padding: 6px 0; border-bottom: 1px solid #F0EFE9; gap: 8px;
         }
         .sv-filter-row:last-child { border-bottom: none; }
-        .sv-filter-label {
-          font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF;
-          letter-spacing: 0.02em; flex-shrink: 0; white-space: nowrap;
-        }
+        .sv-filter-label { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; letter-spacing: 0.02em; flex-shrink: 0; white-space: nowrap; }
         .sv-filter-controls { display: flex; align-items: center; gap: 4px; }
 
-        /* ── Segment control ──────────────────────────────────── */
+        /* ── Segment ──────────────────────────────────────────── */
         .sv-segment {
-          display: flex; gap: 1px; background: #F0F1F5;
-          border: 1px solid #E4E6EB; border-radius: 4px; padding: 2px;
+          display: flex; gap: 1px; background: #F0EFE9;
+          border: 1px solid #E8E7E2; border-radius: 7px; padding: 2px;
         }
         .sv-segment-btn {
-          font-family: 'Instrument Sans', sans-serif; font-size: 11px;
-          padding: 3px 8px; border: none; border-radius: 3px; cursor: pointer;
-          background: transparent; color: #9CA3AF; transition: all 0.1s;
-          display: flex; align-items: center; gap: 4px; letter-spacing: -0.01em;
-          white-space: nowrap;
+          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 400;
+          padding: 3px 8px; border: none; border-radius: 5px; cursor: pointer;
+          background: transparent; color: #9098A8; transition: all 0.12s;
+          display: flex; align-items: center; gap: 4px; letter-spacing: -0.01em; white-space: nowrap;
         }
-        .sv-segment-btn.active { background: #fff; color: #0D1117; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
-        .sv-segment-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; transition: background 0.1s; }
+        .sv-segment-btn.active { background: #fff; color: #0D1117; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+        .sv-segment-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; transition: background 0.12s; }
 
         /* ── Select ───────────────────────────────────────────── */
         .sv-select {
-          font-family: 'Instrument Sans', sans-serif; font-size: 12px;
-          padding: 4px 8px; border: 1px solid #E4E6EB; border-radius: 4px;
-          background: #F7F8FA; color: #4B5563; cursor: pointer; outline: none;
-          transition: border-color 0.1s;
+          font-family: 'Inter', sans-serif; font-size: 12px;
+          padding: 5px 9px; border: 1px solid #E8E7E2; border-radius: 7px;
+          background: #fff; color: #5C6070; cursor: pointer; outline: none;
+          transition: border-color 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
-        .sv-select:focus { border-color: #1A56DB; }
+        .sv-select:focus { border-color: #0A2FFF; }
 
         /* ── Radius picker ────────────────────────────────────── */
         .sv-radius-row { display: flex; align-items: center; gap: 6px; }
-        .sv-radius-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #1A56DB; }
+        .sv-radius-val { font-family: 'DM Mono', monospace; font-size: 11px; color: #0A2FFF; }
         .sv-radius-clear, .sv-radius-toggle {
-          font-family: 'Instrument Sans', sans-serif; font-size: 11px;
-          background: none; border: 1px solid #E4E6EB; border-radius: 3px;
-          padding: 2px 7px; cursor: pointer; color: #4B5563; transition: all 0.1s;
+          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+          background: none; border: 1px solid #E8E7E2; border-radius: 6px;
+          padding: 3px 8px; cursor: pointer; color: #5C6070; transition: all 0.12s;
         }
-        .sv-radius-clear:hover, .sv-radius-toggle:hover { background: #F7F8FA; }
+        .sv-radius-clear:hover, .sv-radius-toggle:hover { background: #F0EFE9; }
         .sv-radius-picker {
-          background: #F7F8FA; border: 1px solid #E4E6EB; border-radius: 6px;
+          background: #F5F4F0; border: 1px solid #E8E7E2; border-radius: 10px;
           padding: 10px 12px; margin-bottom: 4px; animation: sv-fadeUp 0.15s ease;
         }
-        .sv-radius-warn { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #DC2626; display: block; margin-bottom: 6px; }
-        .sv-range { width: 100%; accent-color: #1A56DB; margin-bottom: 8px; }
+        .sv-radius-warn { font-family: 'DM Mono', monospace; font-size: 10px; color: #DC2626; display: block; margin-bottom: 6px; }
+        .sv-range { width: 100%; accent-color: #0A2FFF; margin-bottom: 8px; }
         .sv-radius-presets { display: flex; gap: 4px; }
         .sv-radius-preset {
-          font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-          padding: 2px 7px; border: 1px solid #E4E6EB; border-radius: 3px;
-          background: #fff; color: #9CA3AF; cursor: pointer; transition: all 0.1s;
+          font-family: 'DM Mono', monospace; font-size: 10px;
+          padding: 2px 8px; border: 1px solid #E8E7E2; border-radius: 5px;
+          background: #fff; color: #9098A8; cursor: pointer; transition: all 0.12s;
         }
-        .sv-radius-preset.active, .sv-radius-preset:hover { border-color: #1A56DB; color: #1A56DB; background: #EFF6FF; }
+        .sv-radius-preset.active, .sv-radius-preset:hover { border-color: #0A2FFF; color: #0A2FFF; background: #EEF2FF; }
 
         /* ── Card list ────────────────────────────────────────── */
-        .sv-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; background: #F7F8FA; }
+        .sv-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px; background: #F5F4F0; }
 
         /* ── Problem card ─────────────────────────────────────── */
         .sv-card {
-          background: #fff; border: 1px solid #F0F1F5;
-          border-left: 3px solid; border-radius: 4px;
-          overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s;
+          background: #fff; border: 1px solid #E8E7E2;
+          border-left: 3px solid; border-radius: 10px;
+          overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
           animation: sv-slideIn 0.15s ease both;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
-        .sv-card--hovered { box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-color: #DDE0E7; }
-        .sv-card--selected { background: #F5F9FF; border-color: #BFDBFE !important; }
-        .sv-card-header { padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; }
+        .sv-card--hovered { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); border-color: #D4D2CC; }
+        .sv-card--selected { background: #F5F8FF; border-color: #C7D2FE !important; }
+        .sv-card-header { padding: 11px 13px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; }
         .sv-card-main { flex: 1; min-width: 0; }
-        .sv-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 5px; }
-        .sv-card-title { font-size: 13px; font-weight: 500; color: #0D1117; line-height: 1.25; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sv-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+        .sv-card-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #0D1117; line-height: 1.25; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sv-card-meta { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-        .sv-card-dist { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #1A56DB; background: #EFF6FF; border-radius: 3px; padding: 1px 4px; border: 1px solid #BFDBFE; }
-        .sv-card-ago { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #C4C9D4; }
-        .sv-card-tags { display: flex; gap: 3px; flex-wrap: wrap; }
-        .sv-card-chevron { color: #C4C9D4; flex-shrink: 0; margin-top: 3px; transition: transform 0.18s ease; }
+        .sv-card-dist { font-family: 'DM Mono', monospace; font-size: 9px; color: #0A2FFF; background: #EEF2FF; border-radius: 5px; padding: 1px 5px; border: 1px solid #C7D2FE; }
+        .sv-card-ago { font-family: 'DM Mono', monospace; font-size: 9px; color: #B8BFCC; }
+        .sv-card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+        .sv-card-chevron { color: #B8BFCC; flex-shrink: 0; margin-top: 3px; transition: transform 0.18s ease; }
         .sv-card-chevron.rotated { transform: rotate(180deg); }
 
-        .sv-card-body { padding: 0 12px 12px; border-top: 1px solid #F0F1F5; animation: sv-fadeUp 0.15s ease; }
-        .sv-card-desc { font-size: 12px; color: #4B5563; line-height: 1.65; margin: 9px 0 8px; }
+        .sv-card-body { padding: 0 13px 13px; border-top: 1px solid #F0EFE9; animation: sv-fadeUp 0.15s ease; }
+        .sv-card-desc { font-family: 'Inter', sans-serif; font-size: 12px; color: #5C6070; line-height: 1.65; margin: 9px 0 8px; }
         .sv-card-photos { display: flex; gap: 5px; margin-bottom: 9px; }
-        .sv-card-photo { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; border: 1px solid #E4E6EB; cursor: zoom-in; transition: opacity 0.1s; }
-        .sv-card-photo:hover { opacity: 0.88; }
+        .sv-card-photo { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #E8E7E2; cursor: zoom-in; transition: opacity 0.12s, transform 0.12s; }
+        .sv-card-photo:hover { opacity: 0.88; transform: scale(1.03); }
         .sv-card-details { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
-        .sv-card-loc { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; display: flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+        .sv-card-loc { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; display: flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
         .sv-card-score { display: flex; align-items: center; gap: 6px; }
-        .sv-score-track { width: 44px; height: 2px; background: #F0F1F5; border-radius: 1px; overflow: hidden; }
-        .sv-score-bar { height: 100%; background: #1A56DB; border-radius: 1px; }
-        .sv-score-val { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #C4C9D4; }
+        .sv-score-track { width: 44px; height: 3px; background: #F0EFE9; border-radius: 2px; overflow: hidden; }
+        .sv-score-bar { height: 100%; background: #0A2FFF; border-radius: 2px; }
+        .sv-score-val { font-family: 'DM Mono', monospace; font-size: 9px; color: #B8BFCC; }
         .sv-card-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .sv-conf-count { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; border: 1px solid #F0F1F5; border-radius: 3px; padding: 3px 6px; display: flex; align-items: center; gap: 2px; margin-left: auto; }
+        .sv-conf-count { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; border: 1px solid #F0EFE9; border-radius: 6px; padding: 3px 7px; display: flex; align-items: center; gap: 2px; margin-left: auto; background: #FAFAF8; }
 
         /* ── Empty state ──────────────────────────────────────── */
-        .sv-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 8px; text-align: center; }
-        .sv-empty-title { font-size: 13px; font-weight: 500; color: #4B5563; letter-spacing: -0.01em; }
-        .sv-empty-sub { font-size: 12px; color: #9CA3AF; }
+        .sv-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 44px 20px; gap: 8px; text-align: center; }
+        .sv-empty-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #5C6070; letter-spacing: -0.01em; }
+        .sv-empty-sub { font-family: 'Inter', sans-serif; font-size: 12px; color: #9098A8; }
 
         /* ── Tag ──────────────────────────────────────────────── */
-        .sv-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; border: 1px solid; border-radius: 3px; padding: 1px 5px; letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
+        .sv-tag { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; border: 1px solid; border-radius: 4px; padding: 1px 6px; letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
 
         /* ── Dot ──────────────────────────────────────────────── */
         .sv-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
@@ -1849,26 +1820,27 @@ export default function DashboardPage() {
 
         /* ── Buttons ──────────────────────────────────────────── */
         .sv-btn {
-          font-family: 'Instrument Sans', sans-serif; font-size: 13px; font-weight: 500;
-          padding: 8px 16px; border-radius: 5px; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+          padding: 9px 18px; border-radius: 9px; cursor: pointer;
           display: inline-flex; align-items: center; gap: 5px;
-          transition: all 0.1s; letter-spacing: -0.01em; white-space: nowrap;
+          transition: all 0.15s; letter-spacing: -0.01em; white-space: nowrap;
         }
-        .sv-btn--primary { background: #1A56DB; color: #fff; border: none; box-shadow: 0 1px 3px rgba(26,86,219,0.25); }
-        .sv-btn--primary:hover:not(:disabled) { background: #1648C0; }
-        .sv-btn--primary:disabled { background: #93BBFD; cursor: not-allowed; }
-        .sv-btn--ghost { background: #fff; border: 1px solid #E4E6EB; color: #4B5563; }
-        .sv-btn--ghost:hover { background: #F7F8FA; border-color: #D1D5DB; }
-        .sv-btn--danger { background: #fff; border: 1px solid #E4E6EB; color: #4B5563; }
+        .sv-btn--primary { background: #0A2FFF; color: #fff; border: none; box-shadow: 0 2px 12px rgba(10,47,255,0.22); }
+        .sv-btn--primary:hover:not(:disabled) { background: #0822D4; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(10,47,255,0.28); }
+        .sv-btn--primary:active { transform: scale(0.98); }
+        .sv-btn--primary:disabled { background: #93BBFD; cursor: not-allowed; box-shadow: none; }
+        .sv-btn--ghost { background: #fff; border: 1px solid #E8E7E2; color: #5C6070; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .sv-btn--ghost:hover { background: #FAFAF8; border-color: #D4D2CC; color: #0D1117; }
+        .sv-btn--danger { background: #fff; border: 1px solid #E8E7E2; color: #5C6070; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .sv-btn--danger:hover { background: #FEF2F2; border-color: #FCA5A5; color: #DC2626; }
         .sv-btn--confirmed { background: #ECFDF5; border: 1px solid #6EE7B7; color: #059669; cursor: not-allowed; }
-        .sv-btn--sm { font-size: 11px; padding: 4px 10px; }
+        .sv-btn--sm { font-size: 11px; padding: 5px 11px; border-radius: 7px; }
 
         /* ── Status select ────────────────────────────────────── */
         .sv-status-select {
-          font-family: 'Instrument Sans', sans-serif; font-size: 11px; font-weight: 500;
-          padding: 4px 7px; border: 1px solid; border-radius: 3px;
-          cursor: pointer; outline: none; transition: all 0.1s;
+          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+          padding: 4px 8px; border: 1px solid; border-radius: 6px;
+          cursor: pointer; outline: none; transition: all 0.12s;
         }
 
         /* ── Main content area ────────────────────────────────── */
@@ -1877,312 +1849,321 @@ export default function DashboardPage() {
         /* ── Subbar ───────────────────────────────────────────── */
         .sv-subbar {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 5px 14px; background: #fff; border-bottom: 1px solid #E4E6EB; flex-shrink: 0;
+          padding: 6px 16px; background: #FAFAF8; border-bottom: 1px solid #E8E7E2; flex-shrink: 0;
         }
-        .sv-subbar-loc { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #C4C9D4; }
-        .sv-subbar-loc span { color: #4B5563; }
+        .sv-subbar-loc { font-family: 'DM Mono', monospace; font-size: 11px; color: #B8BFCC; }
+        .sv-subbar-loc span { color: #5C6070; }
         .sv-subbar-status {
-          font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-          background: #F7F8FA; border: 1px solid #E4E6EB; border-radius: 3px; padding: 3px 9px;
+          font-family: 'DM Mono', monospace; font-size: 11px;
+          background: #F5F4F0; border: 1px solid #E8E7E2; border-radius: 20px; padding: 3px 10px;
           transition: all 0.15s; letter-spacing: 0.01em;
         }
-        .sv-subbar-status.active { background: #EFF6FF; border-color: #BFDBFE; color: #1A56DB; }
+        .sv-subbar-status.active { background: #EEF2FF; border-color: #C7D2FE; color: #0A2FFF; }
 
         /* ── Map container ────────────────────────────────────── */
         .sv-map-wrap { flex: 1; overflow: hidden; position: relative; min-height: 0; }
 
         /* ── Detail bar ───────────────────────────────────────── */
-        .sv-detail-bar { position: relative; flex-shrink: 0; background: #fff; border-top: 1px solid #E4E6EB; }
-        .sv-detail-inner { height: 160px; padding: 12px 16px; overflow-y: auto; }
-        .sv-detail-hint { display: flex; align-items: center; justify-content: center; height: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #C4C9D4; }
+        .sv-detail-bar { position: relative; flex-shrink: 0; background: #fff; border-top: 1px solid #E8E7E2; }
+        .sv-detail-inner { height: 160px; padding: 14px 18px; overflow-y: auto; }
+        .sv-detail-hint { display: flex; align-items: center; justify-content: center; height: 100%; font-family: 'DM Mono', monospace; font-size: 11px; color: #B8BFCC; }
         .sv-detail-content { animation: sv-fadeUp 0.15s ease; }
-        .sv-detail-top { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .sv-detail-name { font-size: 15px; font-weight: 600; color: #0D1117; letter-spacing: -0.02em; }
-        .sv-detail-desc { font-size: 12px; color: #4B5563; line-height: 1.6; margin-bottom: 10px; }
-        .sv-detail-photos { display: flex; gap: 5px; margin-bottom: 10px; }
-        .sv-detail-photo { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid #E4E6EB; cursor: zoom-in; }
+        .sv-detail-top { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; flex-wrap: wrap; }
+        .sv-detail-name { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: #0D1117; letter-spacing: -0.02em; }
+        .sv-detail-desc { font-family: 'Inter', sans-serif; font-size: 12.5px; color: #5C6070; line-height: 1.6; margin-bottom: 10px; letter-spacing: -0.005em; }
+        .sv-detail-photos { display: flex; gap: 6px; margin-bottom: 10px; }
+        .sv-detail-photo { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid #E8E7E2; cursor: zoom-in; transition: transform 0.12s; }
+        .sv-detail-photo:hover { transform: scale(1.05); }
         .sv-detail-fields { display: flex; gap: 20px; flex-wrap: wrap; }
-        .sv-detail-field-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: #C4C9D4; margin-bottom: 3px; display: block; }
-        .sv-detail-field-val { font-size: 13px; color: #0D1117; letter-spacing: -0.01em; }
+        .sv-detail-field-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; color: #B8BFCC; margin-bottom: 3px; display: block; }
+        .sv-detail-field-val { font-family: 'Inter', sans-serif; font-size: 13px; color: #0D1117; letter-spacing: -0.01em; font-weight: 500; }
         .sv-detail-score-wrap { display: flex; align-items: center; gap: 7px; }
-        .sv-detail-score-track { width: 60px; height: 2px; background: #F0F1F5; border-radius: 1px; overflow: hidden; }
-        .sv-detail-score-bar { height: 100%; background: #1A56DB; border-radius: 1px; }
-        .sv-detail-score-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #4B5563; }
+        .sv-detail-score-track { width: 60px; height: 3px; background: #F0EFE9; border-radius: 2px; overflow: hidden; }
+        .sv-detail-score-bar { height: 100%; background: #0A2FFF; border-radius: 2px; }
+        .sv-detail-score-val { font-family: 'DM Mono', monospace; font-size: 11px; color: #5C6070; }
 
-        /* ── Icon tray (right edge of detail bar) ─────────────── */
+        /* ── Icon tray ────────────────────────────────────────── */
         .sv-icon-tray {
-          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
           z-index: 10; display: flex; flex-direction: column; gap: 2px;
-          background: #fff; border: 1px solid #E4E6EB; border-radius: 6px;
-          padding: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+          background: #fff; border: 1px solid #E8E7E2; border-radius: 10px;
+          padding: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);
         }
         .sv-icon-btn {
-          width: 30px; height: 30px; border-radius: 4px; border: none;
+          width: 32px; height: 32px; border-radius: 7px; border: none;
           background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
-          color: #9CA3AF; transition: all 0.1s; position: relative;
+          color: #9098A8; transition: all 0.12s; position: relative;
         }
-        .sv-icon-btn.active { background: #EFF6FF; color: #1A56DB; }
-        .sv-icon-btn:hover:not(.active) { background: #F7F8FA; }
-        .sv-icon-divider { height: 1px; background: #F0F1F5; margin: 1px 2px; }
+        .sv-icon-btn.active { background: #EEF2FF; color: #0A2FFF; }
+        .sv-icon-btn:hover:not(.active) { background: #F5F4F0; }
+        .sv-icon-divider { height: 1px; background: #F0EFE9; margin: 1px 2px; }
         .sv-notif-badge {
           position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
           border-radius: 50%; background: #DC2626; border: 2px solid #fff;
-          font-size: 7px; font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+          font-size: 7px; font-family: 'DM Mono', monospace; font-weight: 600;
           color: #fff; display: flex; align-items: center; justify-content: center;
         }
         .sv-avatar {
-          width: 22px; height: 22px; border-radius: 50%; background: #1A56DB;
+          width: 22px; height: 22px; border-radius: 50%; background: #0A2FFF;
           color: #fff; display: flex; align-items: center; justify-content: center;
-          font-size: 10px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+          font-size: 10px; font-weight: 700; font-family: 'DM Mono', monospace;
         }
 
-        /* ── Right panel (notif / profile) ────────────────────── */
-        .sv-right-panel { animation: sv-panelUp 0.18s ease; display: flex; flex-direction: column; max-height: 380px; overflow: hidden; }
-        .sv-panel-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #F0F1F5; flex-shrink: 0; }
-        .sv-panel-toolbar-title { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: #0D1117; }
-        .sv-icon-close { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 20px; line-height: 1; padding: 0 2px; }
+        /* ── Right panel ──────────────────────────────────────── */
+        .sv-right-panel { animation: sv-panelUp 0.18s ease; display: flex; flex-direction: column; max-height: 400px; overflow: hidden; }
+        .sv-panel-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #F0EFE9; flex-shrink: 0; }
+        .sv-panel-toolbar-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #0D1117; letter-spacing: -0.01em; }
+        .sv-icon-close { background: none; border: none; cursor: pointer; color: #9098A8; font-size: 20px; line-height: 1; padding: 0 2px; transition: color 0.12s; }
+        .sv-icon-close:hover { color: #0D1117; }
         .sv-panel-body { flex: 1; overflow-y: auto; }
 
         /* ── Notifications ────────────────────────────────────── */
-        .sv-notif-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-bottom: 1px solid #F0F1F5; cursor: pointer; transition: background 0.1s; }
-        .sv-notif-item:hover { background: #F7F8FA; }
-        .sv-notif-item.unread { background: #F5F9FF; }
-        .sv-notif-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-        .sv-notif-title { font-size: 12px; font-weight: 500; color: #0D1117; margin-bottom: 2px; letter-spacing: -0.01em; }
-        .sv-notif-msg { font-size: 11px; color: #4B5563; line-height: 1.45; }
-        .sv-notif-time { font-size: 10px; color: #C4C9D4; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
-        .sv-notif-unread-dot { width: 6px; height: 6px; border-radius: 50%; background: #1A56DB; flex-shrink: 0; margin-top: 4px; }
-        .sv-notif-empty { padding: 28px 16px; text-align: center; font-size: 13px; color: #9CA3AF; font-family: 'Instrument Sans', sans-serif; }
-        .sv-notif-mark-all { font-family: 'Instrument Sans', sans-serif; font-size: 12px; color: #1A56DB; background: none; border: none; cursor: pointer; padding: 8px 14px; width: 100%; text-align: left; border-bottom: 1px solid #F0F1F5; }
+        .sv-notif-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 16px; border-bottom: 1px solid #F0EFE9; cursor: pointer; transition: background 0.12s; }
+        .sv-notif-item:hover { background: #FAFAF8; }
+        .sv-notif-item.unread { background: #F5F8FF; }
+        .sv-notif-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .sv-notif-title { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: #0D1117; margin-bottom: 2px; letter-spacing: -0.01em; }
+        .sv-notif-msg { font-family: 'Inter', sans-serif; font-size: 11px; color: #5C6070; line-height: 1.45; }
+        .sv-notif-time { font-family: 'DM Mono', monospace; font-size: 10px; color: #B8BFCC; margin-top: 3px; }
+        .sv-notif-unread-dot { width: 6px; height: 6px; border-radius: 50%; background: #0A2FFF; flex-shrink: 0; margin-top: 4px; }
+        .sv-notif-empty { padding: 32px 16px; text-align: center; font-family: 'Inter', sans-serif; font-size: 13px; color: #9098A8; }
+        .sv-notif-mark-all { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #0A2FFF; background: none; border: none; cursor: pointer; padding: 8px 16px; width: 100%; text-align: left; border-bottom: 1px solid #F0EFE9; transition: background 0.12s; }
+        .sv-notif-mark-all:hover { background: #F5F8FF; }
 
         /* ── Profile ──────────────────────────────────────────── */
         .sv-profile-content { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-        .sv-profile-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #F7F8FA; border-radius: 6px; border: 1px solid #F0F1F5; }
-        .sv-profile-avatar { width: 38px; height: 38px; border-radius: 50%; background: #1A56DB; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; flex-shrink: 0; }
-        .sv-profile-name { font-size: 13px; font-weight: 500; color: #0D1117; letter-spacing: -0.01em; }
-        .sv-profile-email { font-size: 11px; color: #9CA3AF; font-family: 'IBM Plex Mono', monospace; margin-top: 1px; }
-        .sv-profile-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: #1A56DB; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 3px; padding: 2px 7px; flex-shrink: 0; }
-        .sv-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 8px; background: none; border: none; cursor: pointer; font-family: 'Instrument Sans', sans-serif; font-size: 13px; color: #4B5563; border-radius: 4px; transition: all 0.1s; text-align: left; letter-spacing: -0.01em; }
-        .sv-menu-item:hover { background: #F7F8FA; color: #0D1117; }
-        .sv-signout-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 8px; background: none; border: 1px solid #FCA5A5; cursor: pointer; font-family: 'Instrument Sans', sans-serif; font-size: 13px; color: #DC2626; border-radius: 4px; transition: all 0.1s; text-align: left; letter-spacing: -0.01em; }
+        .sv-profile-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #F5F4F0; border-radius: 10px; border: 1px solid #E8E7E2; }
+        .sv-profile-avatar { width: 40px; height: 40px; border-radius: 50%; background: #0A2FFF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; box-shadow: 0 2px 10px rgba(10,47,255,0.22); }
+        .sv-profile-name { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #0D1117; letter-spacing: -0.01em; }
+        .sv-profile-email { font-family: 'DM Mono', monospace; font-size: 11px; color: #9098A8; margin-top: 1px; }
+        .sv-profile-count { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #0A2FFF; background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 20px; padding: 2px 9px; flex-shrink: 0; }
+        .sv-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; color: #5C6070; border-radius: 7px; transition: all 0.12s; text-align: left; letter-spacing: -0.01em; font-weight: 400; }
+        .sv-menu-item:hover { background: #F5F4F0; color: #0D1117; }
+        .sv-signout-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; background: none; border: 1px solid #FCA5A5; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; color: #DC2626; border-radius: 9px; transition: all 0.12s; text-align: left; letter-spacing: -0.01em; font-weight: 500; }
         .sv-signout-btn:hover { background: #FEF2F2; }
 
         /* ── Desktop form drawer ──────────────────────────────── */
         .sv-form-drawer {
-          position: absolute; left: 360px; bottom: 0; width: 340px; z-index: 400;
-          background: #fff; border-top: 1px solid #E4E6EB; border-right: 1px solid #E4E6EB;
-          box-shadow: 4px -4px 24px rgba(0,0,0,0.07);
-          padding: 16px 14px 24px; display: flex; flex-direction: column; gap: 12px;
+          position: absolute; left: 360px; bottom: 0; width: 350px; z-index: 400;
+          background: #fff; border-top: 1px solid #E8E7E2; border-right: 1px solid #E8E7E2;
+          box-shadow: 6px -4px 28px rgba(0,0,0,0.08);
+          padding: 18px 16px 28px; display: flex; flex-direction: column; gap: 14px;
           animation: sv-fadeUp 0.18s ease; max-height: 88vh; overflow-y: auto;
+          border-radius: 0 14px 0 0;
         }
         .sv-form-drawer.collapsed-sidebar { left: 18px; }
 
         /* ── Form ─────────────────────────────────────────────── */
-        .sv-form-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #F0F1F5; }
-        .sv-form-title { font-size: 14px; font-weight: 600; color: #0D1117; letter-spacing: -0.02em; }
+        .sv-form-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #F0EFE9; }
+        .sv-form-title { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: #0D1117; letter-spacing: -0.02em; }
         .sv-input {
-          width: 100%; font-family: 'Instrument Sans', sans-serif; font-size: 13px;
-          padding: 9px 11px; border: 1px solid #E4E6EB; border-radius: 4px;
-          background: #F7F8FA; color: #0D1117; outline: none;
-          transition: border-color 0.1s, background 0.1s; letter-spacing: -0.01em;
+          width: 100%; font-family: 'Inter', sans-serif; font-size: 13px;
+          padding: 10px 12px; border: 1px solid #E8E7E2; border-radius: 9px;
+          background: #FAFAF8; color: #0D1117; outline: none;
+          transition: border-color 0.12s, background 0.12s, box-shadow 0.12s; letter-spacing: -0.01em;
         }
-        .sv-input:focus { border-color: #1A56DB; background: #fff; box-shadow: 0 0 0 3px rgba(26,86,219,0.07); }
+        .sv-input:focus { border-color: #0A2FFF; background: #fff; box-shadow: 0 0 0 3px rgba(10,47,255,0.08); }
         .sv-textarea { resize: vertical; line-height: 1.55; }
 
         /* ── Category grid ────────────────────────────────────── */
-        .sv-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .sv-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .sv-cat-btn {
-          display: flex; align-items: center; gap: 6px; padding: 7px 9px;
-          border: 1px solid #E4E6EB; border-radius: 4px; background: #fff;
-          color: #4B5563; cursor: pointer; font-family: 'Instrument Sans', sans-serif;
-          font-size: 12px; transition: all 0.1s; text-align: left; letter-spacing: -0.01em;
+          display: flex; align-items: center; gap: 7px; padding: 8px 10px;
+          border: 1px solid #E8E7E2; border-radius: 8px; background: #fff;
+          color: #5C6070; cursor: pointer; font-family: 'Inter', sans-serif;
+          font-size: 12px; font-weight: 400; transition: all 0.12s; text-align: left; letter-spacing: -0.01em;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
-        .sv-cat-btn:hover:not(.active) { background: #F7F8FA; }
+        .sv-cat-btn:hover:not(.active) { background: #F5F4F0; border-color: #D4D2CC; }
         .sv-cat-icon { font-size: 9px; flex-shrink: 0; }
 
         /* ── Severity row ─────────────────────────────────────── */
-        .sv-sev-row { display: flex; gap: 4px; }
+        .sv-sev-row { display: flex; gap: 5px; }
         .sv-sev-btn {
-          flex: 1; padding: 7px 0; border: 1px solid #E4E6EB; border-radius: 4px;
-          background: #fff; color: #9CA3AF; cursor: pointer;
-          font-family: 'Instrument Sans', sans-serif; font-size: 12px;
-          transition: all 0.1s; letter-spacing: -0.01em;
+          flex: 1; padding: 8px 0; border: 1px solid #E8E7E2; border-radius: 8px;
+          background: #FAFAF8; color: #9098A8; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+          transition: all 0.12s; letter-spacing: -0.01em;
         }
-        .sv-sev-btn:hover:not(.active) { background: #F7F8FA; }
+        .sv-sev-btn:hover:not(.active) { background: #F0EFE9; }
 
         /* ── Location display ─────────────────────────────────── */
         .sv-loc-display {
-          padding: 8px 11px; border: 1px dashed #E4E6EB; border-radius: 4px;
-          background: #F7F8FA; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
-          color: #C4C9D4; min-height: 38px; display: flex; align-items: center; gap: 6px;
+          padding: 10px 12px; border: 1.5px dashed #E8E7E2; border-radius: 9px;
+          background: #FAFAF8; font-size: 12px; font-family: 'DM Mono', monospace;
+          color: #B8BFCC; min-height: 40px; display: flex; align-items: center; gap: 6px;
           transition: all 0.15s;
         }
         .sv-loc-display--set { border-color: #6EE7B7; background: #ECFDF5; color: #059669; border-style: solid; }
         .sv-loc-coords { flex: 1; font-size: 11px; }
         .sv-loc-clear { background: none; border: none; cursor: pointer; color: #059669; font-size: 16px; line-height: 1; padding: 0; }
-        .sv-loc-use-me { font-family: 'Instrument Sans', sans-serif; font-size: 12px; color: #1A56DB; background: none; border: none; cursor: pointer; padding: 4px 0 0; letter-spacing: -0.01em; }
+        .sv-loc-use-me { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #0A2FFF; background: none; border: none; cursor: pointer; padding: 5px 0 0; letter-spacing: -0.01em; transition: text-decoration 0.12s; }
         .sv-loc-use-me:hover { text-decoration: underline; }
 
         /* ── Photo grid ───────────────────────────────────────── */
-        .sv-photo-grid { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-        .sv-photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 4px; overflow: hidden; border: 1px solid #E4E6EB; }
-        .sv-photo-thumb--new { border-color: #1A56DB; border-width: 2px; }
+        .sv-photo-grid { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
+        .sv-photo-thumb { position: relative; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; border: 1px solid #E8E7E2; }
+        .sv-photo-thumb--new { border-color: #0A2FFF; border-width: 2px; }
         .sv-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .sv-photo-remove { position: absolute; top: 3px; right: 3px; width: 17px; height: 17px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
-        .sv-photo-add { display: flex; align-items: center; gap: 7px; width: 100%; padding: 8px 11px; border: 1px dashed #E4E6EB; border-radius: 4px; background: #F7F8FA; color: #9CA3AF; cursor: pointer; font-family: 'Instrument Sans', sans-serif; font-size: 12px; transition: all 0.1s; }
-        .sv-photo-add:hover { border-color: #1A56DB; color: #1A56DB; background: #EFF6FF; }
-        .sv-photo-count { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #C4C9D4; }
-        .sv-photo-max { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; padding: 4px 0; }
+        .sv-photo-remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
+        .sv-photo-remove:hover { background: rgba(0,0,0,0.7); }
+        .sv-photo-add { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 1.5px dashed #E8E7E2; border-radius: 9px; background: #FAFAF8; color: #9098A8; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 400; transition: all 0.12s; }
+        .sv-photo-add:hover { border-color: #0A2FFF; color: #0A2FFF; background: #EEF2FF; }
+        .sv-photo-count { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 9px; color: #B8BFCC; }
+        .sv-photo-max { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; padding: 4px 0; }
 
         /* ── Anon checkbox ────────────────────────────────────── */
-        .sv-anon-check { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #4B5563; cursor: pointer; font-family: 'Instrument Sans', sans-serif; }
-        .sv-anon-check input { width: 13px; height: 13px; cursor: pointer; accent-color: #1A56DB; }
+        .sv-anon-check { display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; font-size: 12px; color: #5C6070; cursor: pointer; }
+        .sv-anon-check input { width: 14px; height: 14px; cursor: pointer; accent-color: #0A2FFF; }
 
         /* ── Form actions ─────────────────────────────────────── */
-        .sv-form-actions { display: flex; gap: 6px; padding-top: 4px; }
+        .sv-form-actions { display: flex; gap: 8px; padding-top: 4px; }
         .sv-form-actions .sv-btn--ghost { flex: 1; justify-content: center; }
         .sv-form-actions .sv-btn--primary { flex: 2; justify-content: center; }
 
         /* ── Field label ──────────────────────────────────────── */
-        .sv-field-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 5px; }
+        .sv-field-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9098A8; margin-bottom: 6px; }
 
         /* ── Analytics / Reports panels ───────────────────────── */
-        .sv-panel-scroll { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; background: #F7F8FA; }
+        .sv-panel-scroll { flex: 1; overflow-y: auto; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; background: #F5F4F0; }
         .sv-panel-header { padding-bottom: 4px; }
-        .sv-panel-title { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; color: #0D1117; letter-spacing: -0.02em; }
-        .sv-panel-sub { font-size: 12px; color: #9CA3AF; margin-top: 3px; letter-spacing: -0.01em; }
+        .sv-panel-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 800; color: #0D1117; letter-spacing: -0.03em; }
+        .sv-panel-sub { font-family: 'Inter', sans-serif; font-size: 13px; color: #9098A8; margin-top: 3px; letter-spacing: -0.01em; font-weight: 400; }
 
         /* ── KPI row ──────────────────────────────────────────── */
         .sv-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        .sv-kpi { background: #fff; border: 1px solid #F0F1F5; border-radius: 6px; padding: 14px 14px 12px; position: relative; overflow: hidden; }
-        .sv-kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-        .sv-kpi-label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #C4C9D4; margin-bottom: 8px; margin-top: 6px; }
-        .sv-kpi-value { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 500; line-height: 1; margin-bottom: 7px; }
-        .sv-kpi-trend { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; }
+        .sv-kpi { background: #fff; border: 1px solid #E8E7E2; border-radius: 12px; padding: 16px 16px 14px; position: relative; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: box-shadow 0.15s, transform 0.15s; }
+        .sv-kpi:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); transform: translateY(-1px); }
+        .sv-kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 12px 12px 0 0; }
+        .sv-kpi-label { display: block; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #B8BFCC; margin-bottom: 8px; margin-top: 6px; }
+        .sv-kpi-value { display: block; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 7px; }
+        .sv-kpi-trend { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; }
 
         /* ── Chart cards ──────────────────────────────────────── */
         .sv-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .sv-chart-card { background: #fff; border: 1px solid #F0F1F5; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; }
+        .sv-chart-card { background: #fff; border: 1px solid #E8E7E2; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
         .sv-chart-card--center { align-items: center; }
-        .sv-chart-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 10px; }
+        .sv-chart-title { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #9098A8; margin-bottom: 10px; }
         .sv-ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-        .sv-ring-sub { font-size: 11px; color: #9CA3AF; font-family: 'IBM Plex Mono', monospace; }
+        .sv-ring-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: #9098A8; }
 
         /* ── Bar chart ────────────────────────────────────────── */
         .sv-bar-chart { display: flex; flex-direction: column; }
         .sv-bar-track { display: flex; align-items: flex-end; gap: 3px; }
         .sv-bar-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
-        .sv-bar { width: 100%; min-height: 2px; border-radius: 2px 2px 0 0; opacity: 0.85; transition: height 0.5s ease; }
+        .sv-bar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; opacity: 0.85; transition: height 0.5s ease; }
         .sv-bar-labels { display: flex; gap: 3px; margin-top: 4px; }
-        .sv-bar-label { flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #C4C9D4; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sv-bar-label { flex: 1; font-family: 'DM Mono', monospace; font-size: 8px; color: #B8BFCC; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* ── Heatmap ──────────────────────────────────────────── */
         .sv-heatmap { display: flex; gap: 2px; align-items: flex-end; height: 60px; }
         .sv-heatmap-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
-        .sv-heatmap-bar { width: 100%; border-radius: 1px 1px 0 0; transition: all 0.15s; }
+        .sv-heatmap-bar { width: 100%; border-radius: 2px 2px 0 0; transition: all 0.15s; }
         .sv-heatmap-labels { display: flex; justify-content: space-between; margin-top: 4px; }
-        .sv-heatmap-label { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #C4C9D4; }
+        .sv-heatmap-label { font-family: 'DM Mono', monospace; font-size: 8px; color: #B8BFCC; }
 
         /* ── Severity stat rows ───────────────────────────────── */
         .sv-sev-row-stat { margin-bottom: 9px; display: grid; grid-template-columns: 44px 1fr 24px; align-items: center; gap: 8px; }
-        .sv-sev-stat-label { font-size: 11px; color: #4B5563; font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.01em; }
-        .sv-progress-track { height: 4px; background: #F0F1F5; border-radius: 2px; overflow: hidden; }
-        .sv-progress-bar { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-        .sv-sev-stat-count { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; text-align: right; }
+        .sv-sev-stat-label { font-family: 'Inter', sans-serif; font-size: 11px; color: #5C6070; letter-spacing: -0.01em; }
+        .sv-progress-track { height: 4px; background: #F0EFE9; border-radius: 3px; overflow: hidden; }
+        .sv-progress-bar { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+        .sv-sev-stat-count { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; text-align: right; }
 
         /* ── Category legend ──────────────────────────────────── */
         .sv-cat-legend-row { display: flex; align-items: center; gap: 5px; }
-        .sv-cat-legend-name { font-size: 10px; color: #4B5563; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Instrument Sans', sans-serif; }
-        .sv-cat-legend-pct { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #9CA3AF; }
+        .sv-cat-legend-name { font-family: 'Inter', sans-serif; font-size: 10px; color: #5C6070; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sv-cat-legend-pct { font-family: 'DM Mono', monospace; font-size: 9px; color: #9098A8; }
 
         /* ── Donut label ──────────────────────────────────────── */
         .sv-donut-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 
         /* ── Table card ───────────────────────────────────────── */
-        .sv-table-card { background: #fff; border: 1px solid #F0F1F5; border-radius: 6px; overflow: hidden; }
-        .sv-table-head { padding: 10px 14px; border-bottom: 1px solid #F0F1F5; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #9CA3AF; }
-        .sv-table-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid #F0F1F5; animation: sv-slideIn 0.15s ease both; }
+        .sv-table-card { background: #fff; border: 1px solid #E8E7E2; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .sv-table-head { padding: 11px 16px; border-bottom: 1px solid #F0EFE9; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #9098A8; }
+        .sv-table-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-bottom: 1px solid #F0EFE9; animation: sv-slideIn 0.15s ease both; transition: background 0.12s; }
         .sv-table-row:last-child { border-bottom: none; }
-        .sv-table-rank { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #C4C9D4; width: 18px; text-align: right; flex-shrink: 0; }
+        .sv-table-row:hover { background: #FAFAF8; }
+        .sv-table-rank { font-family: 'DM Mono', monospace; font-size: 10px; color: #B8BFCC; width: 18px; text-align: right; flex-shrink: 0; }
         .sv-table-dot { font-size: 9px; flex-shrink: 0; }
-        .sv-table-name { flex: 1; font-size: 13px; color: #0D1117; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .sv-table-conf { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9CA3AF; flex-shrink: 0; }
+        .sv-table-name { flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; color: #0D1117; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .sv-table-conf { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; flex-shrink: 0; }
 
         /* ── Reports ──────────────────────────────────────────── */
-        .sv-period-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-        .sv-period-btn { font-family: 'Instrument Sans', sans-serif; font-size: 12px; padding: 5px 12px; border: 1px solid #E4E6EB; border-radius: 4px; background: #fff; color: #9CA3AF; cursor: pointer; transition: all 0.1s; font-weight: 400; letter-spacing: -0.01em; }
-        .sv-period-btn.active { background: #EFF6FF; border-color: #BFDBFE; color: #1A56DB; font-weight: 500; }
+        .sv-period-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+        .sv-period-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 6px 14px; border: 1px solid #E8E7E2; border-radius: 20px; background: #fff; color: #9098A8; cursor: pointer; transition: all 0.12s; letter-spacing: -0.01em; }
+        .sv-period-btn.active { background: #EEF2FF; border-color: #C7D2FE; color: #0A2FFF; font-weight: 600; }
         .sv-report-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .sv-report-stat { background: #fff; border: 1px solid #F0F1F5; border-radius: 6px; padding: 12px 12px 10px; }
-        .sv-report-stat-label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #C4C9D4; margin-bottom: 6px; }
-        .sv-report-stat-value { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; line-height: 1; }
-        .sv-export-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+        .sv-report-stat { background: #fff; border: 1px solid #E8E7E2; border-radius: 12px; padding: 14px 14px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .sv-report-stat-label { display: block; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #B8BFCC; margin-bottom: 6px; }
+        .sv-report-stat-value { display: block; font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; line-height: 1; }
+        .sv-export-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
         .sv-report-list { max-height: 300px; overflow-y: auto; }
-        .sv-report-list-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #F0F1F5; animation: sv-fadeIn 0.15s ease both; }
+        .sv-report-list-row { display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-bottom: 1px solid #F0EFE9; animation: sv-fadeIn 0.15s ease both; transition: background 0.12s; }
         .sv-report-list-row:last-child { border-bottom: none; }
-        .sv-report-list-name { flex: 1; font-size: 12px; color: #0D1117; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .sv-report-list-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #C4C9D4; flex-shrink: 0; }
-        .sv-empty-state { padding: 20px; text-align: center; font-size: 12px; color: #9CA3AF; }
+        .sv-report-list-row:hover { background: #FAFAF8; }
+        .sv-report-list-name { flex: 1; font-family: 'Inter', sans-serif; font-size: 12px; color: #0D1117; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .sv-report-list-time { font-family: 'DM Mono', monospace; font-size: 10px; color: #B8BFCC; flex-shrink: 0; }
+        .sv-empty-state { padding: 24px; text-align: center; font-family: 'Inter', sans-serif; font-size: 13px; color: #9098A8; }
 
         /* ── Toast ────────────────────────────────────────────── */
         .sv-toast {
           position: fixed; top: 18px; right: 18px; z-index: 9999;
-          border-radius: 6px; padding: 9px 14px;
-          font-family: 'Instrument Sans', sans-serif; font-size: 13px; font-weight: 500;
-          display: flex; align-items: center; gap: 7px; animation: sv-toastIn 0.2s ease;
-          max-width: 300px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+          border-radius: 12px; padding: 10px 16px;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+          display: flex; align-items: center; gap: 8px; animation: sv-toastIn 0.2s ease;
+          max-width: 300px; box-shadow: 0 4px 20px rgba(0,0,0,0.10);
           letter-spacing: -0.01em;
         }
         .sv-toast--success { background: #ECFDF5; border: 1px solid #6EE7B7; color: #059669; }
         .sv-toast--error   { background: #FEF2F2; border: 1px solid #FCA5A5; color: #DC2626; }
-        .sv-toast--info    { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1A56DB; }
+        .sv-toast--info    { background: #EEF2FF; border: 1px solid #C7D2FE; color: #0A2FFF; }
 
         /* ── Skeleton ─────────────────────────────────────────── */
-        .sv-skeleton-card { background: #fff; border-radius: 4px; padding: 11px 12px; border: 1px solid #F0F1F5; }
-        .sv-skel { background: #F0F1F5; border-radius: 3px; animation: sv-shimmer 1.5s ease-in-out infinite; }
+        .sv-skeleton-card { background: #fff; border-radius: 10px; padding: 12px 13px; border: 1px solid #E8E7E2; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
+        .sv-skel { background: #ECEAE4; border-radius: 5px; animation: sv-shimmer 1.5s ease-in-out infinite; }
         .sv-skel-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
 
         /* ── FAB ──────────────────────────────────────────────── */
         .sv-fab {
-          position: fixed; bottom: 20px; right: 16px; z-index: 600;
-          width: 48px; height: 48px; border-radius: 50%;
-          background: #1A56DB; color: #fff; border: none; cursor: pointer;
-          box-shadow: 0 4px 14px rgba(26,86,219,0.3);
+          position: fixed; bottom: 22px; right: 18px; z-index: 600;
+          width: 50px; height: 50px; border-radius: 50%;
+          background: #0A2FFF; color: #fff; border: none; cursor: pointer;
+          box-shadow: 0 4px 18px rgba(10,47,255,0.32);
           display: flex; align-items: center; justify-content: center;
-          transition: transform 0.1s, box-shadow 0.1s;
+          transition: transform 0.15s, box-shadow 0.15s;
         }
-        .sv-fab:hover  { transform: scale(1.05); box-shadow: 0 6px 18px rgba(26,86,219,0.35); }
+        .sv-fab:hover  { transform: scale(1.06); box-shadow: 0 6px 22px rgba(10,47,255,0.38); }
         .sv-fab:active { transform: scale(0.95); }
 
         /* ── Mobile sidebar ───────────────────────────────────── */
         .sv-mobile-sidebar {
           position: fixed; top: 0; left: 0; bottom: 0;
-          width: 78%; max-width: 340px; background: #fff; z-index: 700;
+          width: 78%; max-width: 340px; background: #FAFAF8; z-index: 700;
           display: flex; flex-direction: column; overflow: hidden;
-          box-shadow: 4px 0 24px rgba(0,0,0,0.10);
+          box-shadow: 4px 0 28px rgba(0,0,0,0.12);
           transform: translateX(-100%);
           transition: transform 0.24s cubic-bezier(0.32,0.72,0,1);
         }
         .sv-mobile-sidebar.open { transform: translateX(0); }
         .sv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.22); z-index: 699; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .sv-overlay.open { opacity: 1; pointer-events: all; }
-        .sv-mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #E4E6EB; flex-shrink: 0; }
-        .sv-mobile-title { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #0D1117; }
-        .sv-mobile-title span { color: #1A56DB; }
+        .sv-mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #E8E7E2; flex-shrink: 0; }
+        .sv-mobile-title { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: #0D1117; }
+        .sv-mobile-title span { color: #0A2FFF; }
 
         /* ── Mobile bottom sheet ──────────────────────────────── */
-        .sv-bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 600; background: #fff; border-radius: 12px 12px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,0.10); padding: 12px 14px 32px; display: flex; flex-direction: column; gap: 12px; max-height: 92vh; overflow-y: auto; animation: sv-sheetUp 0.24s cubic-bezier(0.32,0.72,0,1); }
-        .sv-sheet-handle { width: 30px; height: 3px; border-radius: 2px; background: #E4E6EB; margin: -2px auto 2px; }
+        .sv-bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 600; background: #fff; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 28px rgba(0,0,0,0.12); padding: 14px 16px 36px; display: flex; flex-direction: column; gap: 14px; max-height: 92vh; overflow-y: auto; animation: sv-sheetUp 0.24s cubic-bezier(0.32,0.72,0,1); }
+        .sv-sheet-handle { width: 32px; height: 3px; border-radius: 2px; background: #E8E7E2; margin: -4px auto 2px; }
 
         /* ── Stats modal ──────────────────────────────────────── */
         .sv-modal-backdrop { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.18); display: flex; align-items: center; justify-content: center; animation: sv-fadeIn 0.12s ease; padding: 16px; }
-        .sv-modal { background: #fff; border-radius: 8px; border: 1px solid #E4E6EB; padding: 22px; width: 100%; max-width: 460px; animation: sv-fadeUp 0.16s ease; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.10); }
-        .sv-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-        .sv-modal-title { font-size: 15px; font-weight: 600; color: #0D1117; letter-spacing: -0.02em; }
+        .sv-modal { background: #fff; border-radius: 16px; border: 1px solid #E8E7E2; padding: 24px; width: 100%; max-width: 460px; animation: sv-fadeUp 0.16s ease; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 44px rgba(0,0,0,0.12); }
+        .sv-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .sv-modal-title { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; color: #0D1117; letter-spacing: -0.02em; }
 
         /* ── Responsive ───────────────────────────────────────── */
         @media (max-width: 768px) {
-          .sv-topbar { padding: 0 14px; height: 48px; }
+          .sv-topbar { padding: 0 14px; height: 52px; }
           .sv-nav { display: none; }
           .sv-topbar-right { display: none; }
           .sv-logo-sub { display: none; }
@@ -2222,7 +2203,7 @@ export default function DashboardPage() {
                 if (p) {
                   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
                   s.setAttribute('width', '16'); s.setAttribute('height', '16'); s.setAttribute('viewBox', '0 0 16 16'); s.setAttribute('fill', 'none')
-                  s.innerHTML = '<rect x="2" y="9" width="3" height="5" rx="1" fill="#1A56DB"/><rect x="6.5" y="5" width="3" height="9" rx="1" fill="#1A56DB"/><rect x="11" y="2" width="3" height="12" rx="1" fill="#1A56DB"/>'
+                  s.innerHTML = '<rect x="2" y="9" width="3" height="5" rx="1" fill="#0A2FFF"/><rect x="6.5" y="5" width="3" height="9" rx="1" fill="#0A2FFF"/><rect x="11" y="2" width="3" height="12" rx="1" fill="#0A2FFF"/>'
                   p.appendChild(s)
                 }
               }}
@@ -2266,7 +2247,7 @@ export default function DashboardPage() {
               <button key={l} onClick={() => setLang(l)} className={`sv-lang-btn${lang === l ? ' active' : ''}`}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <button className="sv-report-btn" style={{ fontSize: 12, padding: '5px 11px' }} onClick={openCreate}>
+          <button className="sv-report-btn" style={{ fontSize: 12, padding: '5px 12px' }} onClick={openCreate}>
             + {lang === 'pt' ? 'Novo' : 'New'}
           </button>
         </div>
@@ -2313,7 +2294,7 @@ export default function DashboardPage() {
             <>
               <div className="sv-subbar">
                 <span className="sv-subbar-loc">
-                  Porto, PT <span style={{ color: '#E4E6EB' }}> / </span><span>{t.allZones}</span>
+                  Porto, PT <span style={{ color: '#E8E7E2' }}> / </span><span>{t.allZones}</span>
                   {radiusKm && userLocation && <span style={{ color: DS.blue }}> · {radiusKm}km</span>}
                 </span>
                 <span className={`sv-subbar-status${formMode ? ' active' : ''}`}>
@@ -2372,7 +2353,7 @@ export default function DashboardPage() {
                           )}
                           {notifications.length === 0 ? (
                             <div className="sv-notif-empty">{t.notifEmpty}</div>
-                          ) : notifications.map((n, i) => (
+                          ) : notifications.map((n) => (
                             <div key={n.id} className={`sv-notif-item${n.read ? '' : ' unread'}`} onClick={() => markRead(n.id)}>
                               <div className="sv-notif-icon" style={{ background: n.type === 'new' ? DS.blueLight : DS.greenLight, border: `1px solid ${n.type === 'new' ? DS.blueBorder : DS.greenBorder}` }}>
                                 <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke={n.type === 'new' ? DS.blue : DS.green} strokeWidth="1.8" strokeLinecap="round">
@@ -2448,7 +2429,7 @@ export default function DashboardPage() {
                           {[
                             { label: t.detailLoc,  value: selected.location ?? '—' },
                             { label: t.detailConf, value: `${selected.confirmacoes} ${t.detailVotes}` },
-                            { label: t.detailSev,  value: sevLabel(selected.gravidade) },
+                            { label: t.detailSev,  value: selected.gravidade === 3 ? t.sevHigh : selected.gravidade === 2 ? t.sevMed : t.sevLow },
                           ].map(f => (
                             <div key={f.label}>
                               <span className="sv-detail-field-label">{f.label}</span>
@@ -2519,21 +2500,21 @@ export default function DashboardPage() {
               <span className="sv-modal-title">{t.statsTitle}</span>
               <button className="sv-icon-close" onClick={() => setShowStats(false)}>×</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
               {[
                 { label: t.statTotal,    value: problems.length,                                                                                                   color: DS.blue,  bg: DS.blueLight  },
                 { label: t.statsAvg,     value: problems.length ? (problems.reduce((a, p) => a + p.confirmacoes, 0) / problems.length).toFixed(1) : '0',            color: DS.green, bg: DS.greenLight },
                 { label: t.statCrit,     value: problems.filter(p => p.gravidade === 3).length,                                                                    color: DS.red,   bg: DS.redLight   },
                 { label: t.statsHighPct, value: problems.length ? Math.round(problems.filter(p => p.gravidade === 3).length / problems.length * 100) + '%' : '0%', color: DS.amber, bg: DS.amberLight },
               ].map(s => (
-                <div key={s.label} style={{ background: s.bg, borderRadius: 6, padding: '12px', border: `1px solid ${s.color}20` }}>
-                  <div style={{ fontFamily: DS.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: s.color, marginBottom: 7, opacity: 0.8, fontWeight: 500 }}>{s.label}</div>
-                  <div style={{ fontFamily: DS.mono, fontSize: 24, fontWeight: 500, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: '14px', border: `1px solid ${s.color}20` }}>
+                  <div style={{ fontFamily: DS.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: s.color, marginBottom: 7, opacity: 0.8, fontWeight: 500 }}>{s.label}</div>
+                  <div style={{ fontFamily: DS.mono, fontSize: 26, fontWeight: 500, color: s.color, lineHeight: 1 }}>{s.value}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 16 }}>
               <div className="sv-chart-title" style={{ marginBottom: 10 }}>{t.statsByCat}</div>
               {(Object.keys(CAT_CFG) as Categoria[]).map(cat => {
                 const count = problems.filter(p => p.categoria === cat).length
@@ -2542,11 +2523,11 @@ export default function DashboardPage() {
                 return (
                   <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: 9, color: cfg.color }}>{cfg.icon}</span>
-                    <span style={{ width: 70, fontSize: 11, color: DS.textSub, fontFamily: DS.sans, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{catLabel(cat)}</span>
+                    <span style={{ width: 70, fontFamily: DS.body, fontSize: 11, color: DS.textSub, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{catLabel(cat)}</span>
                     <div className="sv-progress-track" style={{ flex: 1 }}>
                       <div className="sv-progress-bar" style={{ width: `${pct}%`, background: cfg.color }} />
                     </div>
-                    <span style={{ width: 16, fontFamily: DS.mono, fontSize: 10, color: DS.textMuted, textAlign: 'right', flexShrink: 0 }}>{count}</span>
+                    <span style={{ width: 16, fontFamily: DS.mono, fontSize: 10, color: DS.textMuted, textAlign: 'right' as const, flexShrink: 0 }}>{count}</span>
                   </div>
                 )
               })}
@@ -2559,17 +2540,17 @@ export default function DashboardPage() {
                 const pct   = problems.length ? Math.round(count / problems.length * 100) : 0
                 return (
                   <div key={g} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ width: 40, fontSize: 11, color: DS.textSub, fontFamily: DS.sans, flexShrink: 0 }}>{label}</span>
+                    <span style={{ width: 40, fontFamily: DS.body, fontSize: 11, color: DS.textSub, flexShrink: 0 }}>{label}</span>
                     <div className="sv-progress-track" style={{ flex: 1 }}>
                       <div className="sv-progress-bar" style={{ width: `${pct}%`, background: color }} />
                     </div>
-                    <span style={{ width: 16, fontFamily: DS.mono, fontSize: 10, color: DS.textMuted, textAlign: 'right', flexShrink: 0 }}>{count}</span>
+                    <span style={{ width: 16, fontFamily: DS.mono, fontSize: 10, color: DS.textMuted, textAlign: 'right' as const, flexShrink: 0 }}>{count}</span>
                   </div>
                 )
               })}
             </div>
 
-            <button className="sv-btn sv-btn--ghost" onClick={() => setShowStats(false)} style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}>
+            <button className="sv-btn sv-btn--ghost" onClick={() => setShowStats(false)} style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}>
               {t.statsClose}
             </button>
           </div>
