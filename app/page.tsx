@@ -120,6 +120,59 @@ function Badge({ label, color, bg, border }: { label: string; color: string; bg:
   );
 }
 
+// ── Scroll hook ───────────────────────────────────────────────────────────────
+function useScrolled(threshold = 48) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
+// ── Nav logotype ──────────────────────────────────────────────────────────────
+function NavLogo({ scrolled }: { scrolled: boolean }) {
+  return (
+    <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
+
+      {/* Icon — always visible */}
+      <img
+        src="/logo.png"
+        alt="StreetViz"
+        style={{
+          height: 42,
+          width: "auto",
+          display: "block",
+          flexShrink: 0,
+        }}
+      />
+
+      {/* Wordmark — fades + slides out on scroll, collapses width so nav doesn't jump */}
+      <span style={{
+        fontFamily: "'Inter', sans-serif",
+        fontWeight: 800,
+        fontSize: 20,
+        letterSpacing: "-0.04em",
+        lineHeight: 1,
+        userSelect: "none",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        display: "inline-block",
+        opacity: scrolled ? 0 : 1,
+        maxWidth: scrolled ? "0px" : "140px",
+        transform: scrolled ? "translateX(-4px)" : "translateX(0)",
+        transition: "opacity 0.2s ease, max-width 0.26s cubic-bezier(0.4,0,0.2,1), transform 0.22s cubic-bezier(0.4,0,0.2,1)",
+        pointerEvents: scrolled ? "none" : "auto",
+      }}>
+        <span style={{ color: "#0D1117" }}>Street</span>
+        <span style={{ color: "#0A2FFF" }}>Viz</span>
+      </span>
+
+    </Link>
+  );
+}
+
 // ── Ticker ────────────────────────────────────────────────────────────────────
 function Ticker({ problems }: { problems: Problem[] }) {
   if (problems.length === 0) return null;
@@ -203,40 +256,51 @@ function CookieBanner() {
           from { transform: translateY(0);    opacity: 1; }
           to   { transform: translateY(110%); opacity: 0; }
         }
-        .sv-cookie-banner { animation: sv-cookieUp 0.42s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
-        .sv-cookie-banner.hiding { animation: sv-cookieDown 0.36s cubic-bezier(0.4, 0, 1, 1) forwards; }
+        .sv-cookie-banner {
+          animation: sv-cookieUp 0.42s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        }
+        .sv-cookie-banner.hiding {
+          animation: sv-cookieDown 0.36s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
         .sv-cookie-btn-secondary:hover { background: #F3F4F6 !important; }
         .sv-cookie-btn-primary:hover   { background: #0822D4 !important; }
       `}</style>
       <div
         className={`sv-cookie-banner${hiding ? " hiding" : ""}`}
         style={{
-          position: "fixed", bottom: 24, left: "50%",
-          transform: "translateX(-50%)", zIndex: 900,
-          width: "calc(100% - 32px)", maxWidth: 600,
-          background: "#FFFFFF", borderRadius: 14,
-          border: `1px solid ${DS.border}`,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
-          padding: "20px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 20, flexWrap: "wrap" as const,
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 900,
+          background: "#FFFFFF",
+          borderTop: `1px solid ${DS.border}`,
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.10), 0 -1px 4px rgba(0,0,0,0.06)",
+          padding: "14px 16px",
+          paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
+          boxSizing: "border-box" as const,
+          display: "flex",
+          flexDirection: "column" as const,
+          gap: 12,
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{
-            width: 38, height: 38, borderRadius: 8,
+            width: 34, height: 34,
+            borderRadius: 8,
             background: DS.blueLight,
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={DS.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DS.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <div>
-            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13.5, color: DS.text, marginBottom: 3 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: DS.body, fontWeight: 600, fontSize: 13, color: DS.text, margin: "0 0 2px 0" }}>
               Privacidade e cookies
             </p>
-            <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 12.5, color: DS.textSub, lineHeight: 1.55, margin: 0 }}>
+            <p style={{ fontFamily: DS.body, fontWeight: 400, fontSize: 12, color: DS.textSub, lineHeight: 1.5, margin: 0 }}>
               Utilizamos apenas cookies essenciais para o funcionamento da plataforma.{" "}
               <Link href="/privacy" style={{ color: DS.blue, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}>
                 Política de Privacidade
@@ -244,23 +308,35 @@ function CookieBanner() {
             </p>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button className="sv-cookie-btn-secondary" onClick={() => dismiss("rejected")} style={{
-            fontFamily: DS.body, fontSize: 13, fontWeight: 500,
-            color: DS.textSub, background: "#F9FAFB",
-            border: `1px solid ${DS.border}`,
-            borderRadius: 8, padding: "8px 16px", cursor: "pointer",
-            transition: "background 0.15s", whiteSpace: "nowrap" as const,
-          }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            className="sv-cookie-btn-secondary"
+            onClick={() => dismiss("rejected")}
+            style={{
+              flex: 1,
+              fontFamily: DS.body, fontSize: 13, fontWeight: 500,
+              color: DS.textSub, background: "#F9FAFB",
+              border: `1px solid ${DS.border}`,
+              borderRadius: 8, padding: "10px 8px",
+              cursor: "pointer", transition: "background 0.15s",
+              whiteSpace: "nowrap" as const,
+            }}
+          >
             Apenas essenciais
           </button>
-          <button className="sv-cookie-btn-primary" onClick={() => dismiss("accepted")} style={{
-            fontFamily: DS.body, fontSize: 13, fontWeight: 600,
-            color: "#fff", background: DS.blue,
-            border: "none", borderRadius: 8,
-            padding: "8px 20px", cursor: "pointer",
-            transition: "background 0.15s", whiteSpace: "nowrap" as const,
-          }}>
+          <button
+            className="sv-cookie-btn-primary"
+            onClick={() => dismiss("accepted")}
+            style={{
+              flex: 1,
+              fontFamily: DS.body, fontSize: 13, fontWeight: 600,
+              color: "#fff", background: DS.blue,
+              border: "none", borderRadius: 8,
+              padding: "10px 8px",
+              cursor: "pointer", transition: "background 0.15s",
+              whiteSpace: "nowrap" as const,
+            }}
+          >
             Aceitar
           </button>
         </div>
@@ -272,6 +348,7 @@ function CookieBanner() {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
+  const scrolled       = useScrolled(48);
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef     = useRef<any[]>([]);
@@ -402,13 +479,15 @@ export default function Home() {
         @keyframes sv-toastOut   { from { opacity:1; transform:translateY(0) } to { opacity:0; transform:translateY(-16px) } }
         @keyframes sv-pulse      { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
 
+        * { box-sizing: border-box; }
+
         .sv-sheet-overlay { position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.3);animation:sv-fadeIn 0.18s ease; }
         .sv-bottom-sheet  { position:fixed;left:0;right:0;bottom:0;z-index:600;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 36px rgba(0,0,0,0.13);animation:sv-sheetUp 0.26s cubic-bezier(0.32,0.72,0,1);max-height:88vh;overflow-y:auto; }
         .sv-marker-card:hover { transform:translateY(-2px)!important; box-shadow:0 4px 18px rgba(0,0,0,0.09)!important; }
-        .sv-footer-link { color:${DS.textSub}; font-size:13px; text-decoration:none; transition:color 0.15s; }
-        .sv-footer-link:hover { color:${DS.blue}; }
+        .sv-footer-link { color:#5C6070; font-size:13px; text-decoration:none; transition:color 0.15s; }
+        .sv-footer-link:hover { color:#0A2FFF; }
         .sv-skeleton { background:#ECEAE4; border-radius:6px; animation:sv-skeleton 1.4s ease-in-out infinite; }
-        .sv-spinner { width:22px;height:22px;border:2.5px solid #E8E7E2;border-top-color:${DS.blue};border-radius:50%;animation:sv-spin 0.75s linear infinite; }
+        .sv-spinner { width:22px;height:22px;border:2.5px solid #E8E7E2;border-top-color:#0A2FFF;border-radius:50%;animation:sv-spin 0.75s linear infinite; }
         .sv-toast { animation: sv-toastIn 0.28s cubic-bezier(0.32,0.72,0,1) forwards; }
         .sv-toast.hiding { animation: sv-toastOut 0.24s ease forwards; }
 
@@ -419,41 +498,43 @@ export default function Home() {
         .sv-hero-stats { animation: sv-fadeUpHero 0.6s ease both; animation-delay: 0.45s; }
 
         .sv-btn-primary {
-          background: ${DS.blue}; color: #fff;
+          background: #0A2FFF; color: #fff;
           border: none; border-radius: 12px;
           padding: 14px 32px;
-          font-family: ${DS.body}; font-weight: 600; font-size: 15px;
+          font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px;
           cursor: pointer; letter-spacing: -0.01em;
           transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
           box-shadow: 0 2px 16px rgba(10,47,255,0.20);
         }
-        .sv-btn-primary:hover  { background: ${DS.blueDark}; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,47,255,0.28); }
+        .sv-btn-primary:hover  { background: #0822D4; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(10,47,255,0.28); }
         .sv-btn-primary:active { transform: scale(0.98); }
 
         .sv-btn-secondary {
-          background: ${DS.surface}; color: ${DS.text};
-          border: 1px solid ${DS.border}; border-radius: 12px;
+          background: #FFFFFF; color: #0D1117;
+          border: 1px solid #E8E7E2; border-radius: 12px;
           padding: 14px 32px;
-          font-family: ${DS.body}; font-weight: 500; font-size: 15px;
+          font-family: 'Inter', sans-serif; font-weight: 500; font-size: 15px;
           cursor: pointer; letter-spacing: -0.01em;
           transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-          box-shadow: ${DS.shadowSm};
+          box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
-        .sv-btn-secondary:hover  { background: ${DS.surfaceWarm}; transform: translateY(-1px); }
+        .sv-btn-secondary:hover  { background: #FAFAF8; transform: translateY(-1px); }
         .sv-btn-secondary:active { transform: scale(0.98); }
 
         .sv-nav-btn-ghost {
           background: none; border: none; cursor: pointer;
-          font-family: ${DS.body}; font-size: 14px; font-weight: 500;
-          color: ${DS.textSub}; padding: 6px 12px; border-radius: 8px;
+          font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+          color: #5C6070; padding: 6px 12px; border-radius: 8px;
           transition: color 0.15s, background 0.15s;
         }
-        .sv-nav-btn-ghost:hover { color: ${DS.text}; background: ${DS.borderLight}; }
+        .sv-nav-btn-ghost:hover { color: #0D1117; background: #F0EFE9; }
 
-        .sv-step:hover .sv-step-num { transform: scale(1.1); background: ${DS.blue}; }
+        .sv-step:hover .sv-step-num { transform: scale(1.1); background: #0A2FFF; }
         .sv-step { transition: all 0.2s; }
-        .sv-step:hover { border-left-color: ${DS.blue} !important; }
+        .sv-step:hover { border-left-color: #0A2FFF !important; }
         .sv-step-num { transition: all 0.2s; }
+
+        @media(min-width:640px){ .sv-nav-entrar { display: block !important; } }
       `}</style>
 
       {/* ───── NAV ───── */}
@@ -461,15 +542,14 @@ export default function Home() {
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 28px", height: 60,
-        background: "rgba(245,244,240,0.85)",
+        background: scrolled ? "rgba(245,244,240,0.94)" : "rgba(245,244,240,0.85)",
         backdropFilter: "blur(16px)",
         borderBottom: `1px solid ${DS.border}`,
+        transition: "background 0.28s ease",
       }}>
-        <Link href="/">
-          <img src="/logo.png" alt="StreetViz" style={{ height: 52, width: "auto", cursor: "pointer" }} />
-        </Link>
+        <NavLogo scrolled={scrolled} />
+
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <style>{`@media(min-width:640px){ .sv-nav-entrar { display: block !important; } }`}</style>
           <button className="sv-nav-btn-ghost sv-nav-entrar" onClick={() => router.push("/login")}
             style={{ display: "none" }}
           >
@@ -529,9 +609,9 @@ export default function Home() {
           marginLeft: "auto",
           marginRight: "auto",
         }}>
-          A câmara não vai ver o buraco.
+          Toda a gente vê os problemas.
           <br />
-          <span style={{ color: DS.blue }}>Tu viste.</span>
+          <span style={{ color: DS.blue }}>Alguém tem de os resolver.</span>
         </h1>
 
         <p className="sv-hero-sub" style={{
@@ -543,13 +623,13 @@ export default function Home() {
           lineHeight: 1.6,
           letterSpacing: "-0.01em",
         }}>
-          Vê um problema? Reporta. A vizinhança vê. A câmara também pode ver.
+          Reporta o que vês. A comunidade confirma. Quanto mais visível, mais difícil é ignorar.
         </p>
 
         {/* CTAs */}
         <div className="sv-hero-cta" style={{ display: "flex", flexDirection: "row", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 52 }}>
           <button className="sv-btn-primary" onClick={() => router.push("/register")}>
-            Entra. É grátis.
+            Reporta. É grátis.
           </button>
           <button className="sv-btn-secondary" onClick={() => router.push("/dashboard")}>
             Ver o mapa →
@@ -594,7 +674,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <img src="/dashboard-preview.jpg" alt="StreetViz Dashboard" style={{ width: "100%", height: "auto", display: "block" }} />
+            <img src="/dashboard-preview2.png" alt="StreetViz Dashboard" style={{ width: "100%", height: "auto", display: "block" }} />
           </div>
         </div>
       </section>
@@ -603,9 +683,9 @@ export default function Home() {
       <section style={{ padding: "64px 24px 0", maxWidth: 680, margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
           {[
-            { n: "1", title: "Vê o mapa",   desc: "Todos os problemas da tua zona, em tempo real." },
+            { n: "1", title: "Vê o mapa",   desc: "Problemas reportados pela comunidade, na tua zona, em tempo real." },
             { n: "2", title: "Reporta",      desc: "Localização, foto, descrição. Em menos de 30 segundos." },
-            { n: "3", title: "A câmara age", desc: "Prioridade definida pela comunidade. Não pelo acaso." },
+            { n: "3", title: "A pressão cresce", desc: "Quanto mais confirmações, mais visível fica. A comunidade define o que importa." },
           ].map((step) => (
             <div key={step.n} className="sv-step" style={{
               paddingLeft: 16,
@@ -780,7 +860,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Full-width map */}
           <div style={{ height: 460, position: "relative", borderTop: `1px solid ${DS.border}`, borderBottom: `1px solid ${DS.border}` }}>
             <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
             {error ? (
@@ -841,10 +920,10 @@ export default function Home() {
           marginLeft: "auto",
           marginRight: "auto",
         }}>
-          A tua cidade<br />precisa de ti.
+          A tua rua<br />merece atenção.
         </h2>
         <p style={{ fontFamily: DS.body, fontWeight: 300, fontSize: 17, color: "#8892A4", marginBottom: 40, letterSpacing: "-0.01em" }}>
-          Sem complicações. Entra e explora.
+          Começa por reportar o que vês. O resto cresce com a comunidade.
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
           <button
@@ -886,7 +965,20 @@ export default function Home() {
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap", marginBottom: 32 }}>
             <div>
-              <img src="/logo.png" alt="StreetViz" style={{ height: 40, width: "auto", marginBottom: 6 }} />
+              {/* Footer wordmark */}
+              <span style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 800,
+                fontSize: 18,
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+                display: "block",
+                marginBottom: 6,
+                userSelect: "none",
+              }}>
+                <span style={{ color: "#0D1117" }}>Street</span>
+                <span style={{ color: "#0A2FFF" }}>Viz</span>
+              </span>
               <p style={{ fontFamily: DS.body, fontWeight: 300, fontSize: 12, color: DS.textMuted }}>Feito por cidadãos, para cidadãos.</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -906,7 +998,7 @@ export default function Home() {
           </div>
           <div style={{ borderTop: `1px solid ${DS.borderLight}`, paddingTop: 20, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <p style={{ fontFamily: DS.mono, fontSize: 11, color: DS.textFaint }}>
-              © {new Date().getFullYear()} StreetViz. Todos os direitos reservados.
+              © 2025 StreetViz. Todos os direitos reservados.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <Link href="/terms" className="sv-footer-link" style={{ fontSize: 12 }}>Termos e Condições</Link>
