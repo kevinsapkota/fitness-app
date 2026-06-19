@@ -200,6 +200,7 @@ const STRINGS = {
     status:           'Estado',
     radius:           'Raio de pesquisa',
     sort:             'Ordenação',
+    mobileNavTitle:   'Ir para',
   },
   en: {
     tagline:          'IMPROVE YOUR CITY',
@@ -322,6 +323,7 @@ const STRINGS = {
     status:           'Status',
     radius:           'Search radius',
     sort:             'Sort',
+    mobileNavTitle:   'Go to',
   },
 }
 
@@ -426,25 +428,6 @@ function downloadFile(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url)
 }
 
-function generateWeeklyData(problems: ProblemExt[]) {
-  const weeks: { label: string; count: number; resolved: number }[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d     = new Date()
-    d.setDate(d.getDate() - i * 7)
-    const label = `${d.getDate()}/${d.getMonth() + 1}`
-    const count = Math.floor(Math.random() * 8) + 1
-    weeks.push({ label, count, resolved: Math.floor(count * 0.4) })
-  }
-  return weeks
-}
-
-function generateHourlyData() {
-  return Array.from({ length: 24 }, (_, h) => ({
-    hour:  h,
-    count: h >= 7 && h <= 20 ? Math.floor(Math.random() * 12) + 1 : Math.floor(Math.random() * 3),
-  }))
-}
-
 function SkeletonCard() {
   return (
     <div className="sv-skeleton-card">
@@ -533,27 +516,6 @@ function AnimatedNumber({ value, duration = 700 }: { value: number; duration?: n
   }, [value, duration])
 
   return <>{display}</>
-}
-
-function MiniBarChart({ data, height = 80 }: { data: { label: string; value: number; color?: string }[]; height?: number }) {
-  const max = Math.max(...data.map(d => d.value), 1)
-  return (
-    <div className="sv-bar-chart" style={{ height: height + 20 }}>
-      <div className="sv-bar-track" style={{ height }}>
-        {data.map((d, i) => (
-          <div key={i} className="sv-bar-col">
-            <div
-              className="sv-bar"
-              style={{ height: `${(d.value / max) * 100}%`, background: d.color ?? DS.blue }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="sv-bar-labels">
-        {data.map((d, i) => <span key={i} className="sv-bar-label">{d.label}</span>)}
-      </div>
-    </div>
-  )
 }
 
 function DonutChart({ segments, size = 96, label }: { segments: { value: number; color: string; label: string }[]; size?: number; label?: string }) {
@@ -654,6 +616,7 @@ export default function DashboardPage() {
   const [search,            setSearch]           = useState('')
   const [showStats,         setShowStats]        = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen]= useState(false)
+  const [mobileNavOpen,     setMobileNavOpen]    = useState(false)
   const [activeNav,         setActiveNav]        = useState<ActiveNav>('dashboard')
   const [sidebarCollapsed,  setSidebarCollapsed] = useState(false)
   const [radiusKm,          setRadiusKm]         = useState<number | null>(null)
@@ -725,8 +688,6 @@ export default function DashboardPage() {
     return () => { supabase.removeChannel(channel) }
   }, [lang])
 
-  const weeklyData    = useMemo(() => generateWeeklyData(problems), [problems])
-  const hourlyData    = useMemo(() => generateHourlyData(), [])
   const resolutionPct = useMemo(() => {
     if (!problems.length) return 0
     return Math.round(problems.filter(p => p.status === 'resolvido').length / problems.length * 100)
@@ -899,6 +860,12 @@ export default function DashboardPage() {
     return g === 3 ? t.sevHigh : g === 2 ? t.sevMed : t.sevLow
   }
 
+  const goToNav = (nav: ActiveNav) => {
+    setActiveNav(nav)
+    setMobileNavOpen(false)
+    setMobileSidebarOpen(false)
+  }
+
   const PhotoSection = (
     <div>
       <FieldLabel>{t.fieldPhotos}</FieldLabel>
@@ -1048,10 +1015,10 @@ export default function DashboardPage() {
 
       <div className="sv-kpi-row">
         {[
-          { label: t.statTotal,      value: problems.length,                                          color: DS.blue,  trend: '+12%' },
-          { label: t.statConf,       value: problems.reduce((a, p) => a + p.confirmacoes, 0),         color: DS.green, trend: '+8%'  },
-          { label: t.statCrit,       value: problems.filter(p => p.gravidade === 3).length,           color: DS.red,   trend: '-3%'  },
-          { label: t.resolutionRate, value: resolutionPct + '%',                                      color: DS.amber, trend: '+5%'  },
+          { label: t.statTotal,      value: problems.length,                                 color: DS.blue  },
+          { label: t.statConf,       value: problems.reduce((a, p) => a + p.confirmacoes, 0), color: DS.green },
+          { label: t.statCrit,       value: problems.filter(p => p.gravidade === 3).length,   color: DS.red   },
+          { label: t.resolutionRate, value: resolutionPct + '%',                               color: DS.amber },
         ].map((kpi, i) => (
           <div key={i} className="sv-kpi">
             <div className="sv-kpi-accent" style={{ background: kpi.color }} />
@@ -1059,16 +1026,11 @@ export default function DashboardPage() {
             <span className="sv-kpi-value" style={{ color: kpi.color }}>
               {typeof kpi.value === 'number' ? <AnimatedNumber value={kpi.value} /> : kpi.value}
             </span>
-            <span className="sv-kpi-trend">{kpi.trend}</span>
           </div>
         ))}
       </div>
 
       <div className="sv-charts-row">
-        <div className="sv-chart-card">
-          <div className="sv-chart-title">{t.weeklyTitle}</div>
-          <MiniBarChart data={weeklyData.map(w => ({ label: w.label, value: w.count, color: DS.blue }))} height={88} />
-        </div>
         <div className="sv-chart-card">
           <div className="sv-chart-title">{t.statsByCat}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 8 }}>
@@ -1091,36 +1053,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="sv-chart-card">
-        <div className="sv-chart-title">{t.heatmapTitle}</div>
-        <div className="sv-heatmap">
-          {hourlyData.map((h, i) => {
-            const maxH     = Math.max(...hourlyData.map(d => d.count), 1)
-            const pct      = h.count / maxH
-            const isActive = new Date().getHours() === h.hour
-            return (
-              <div key={i} className="sv-heatmap-col" title={`${h.hour}h: ${h.count}`}>
-                <div
-                  className="sv-heatmap-bar"
-                  style={{
-                    height: `${pct * 85 + 5}%`,
-                    background: isActive ? DS.blue : `rgba(10,47,255,${pct * 0.7 + 0.1})`,
-                    outline: isActive ? `2px solid ${DS.blue}` : 'none',
-                    outlineOffset: 1,
-                  }}
-                />
-              </div>
-            )
-          })}
-        </div>
-        <div className="sv-heatmap-labels">
-          {[0, 6, 12, 18, 23].map(h => <span key={h} className="sv-heatmap-label">{h}h</span>)}
-        </div>
-      </div>
-
-      <div className="sv-charts-row">
         <div className="sv-chart-card">
           <div className="sv-chart-title">{t.statsBySev}</div>
           {([[3, t.sevHigh, DS.red], [2, t.sevMed, DS.amber], [1, t.sevLow, DS.green]] as [number, string, string][]).map(([g, label, color]) => {
@@ -1137,16 +1070,17 @@ export default function DashboardPage() {
             )
           })}
         </div>
-        <div className="sv-chart-card sv-chart-card--center">
-          <div className="sv-chart-title" style={{ alignSelf: 'flex-start' }}>{t.resolutionRate}</div>
-          <div style={{ position: 'relative', margin: '8px 0' }}>
-            <ProgressRing pct={resolutionPct} color={DS.green} size={80} />
-            <div className="sv-ring-center">
-              <span style={{ fontFamily: DS.mono, fontSize: 18, fontWeight: 500, color: DS.green }}>{resolutionPct}%</span>
-            </div>
+      </div>
+
+      <div className="sv-chart-card sv-chart-card--center">
+        <div className="sv-chart-title" style={{ alignSelf: 'flex-start' }}>{t.resolutionRate}</div>
+        <div style={{ position: 'relative', margin: '8px 0' }}>
+          <ProgressRing pct={resolutionPct} color={DS.green} size={80} />
+          <div className="sv-ring-center">
+            <span style={{ fontFamily: DS.mono, fontSize: 18, fontWeight: 500, color: DS.green }}>{resolutionPct}%</span>
           </div>
-          <span className="sv-ring-sub">{problems.filter(p => p.status === 'resolvido').length}/{problems.length} {t.subProblems}</span>
         </div>
+        <span className="sv-ring-sub">{problems.filter(p => p.status === 'resolvido').length}/{problems.length} {t.subProblems}</span>
       </div>
 
       <div className="sv-table-card">
@@ -1684,7 +1618,7 @@ export default function DashboardPage() {
         }
         .sv-radius-preset.active, .sv-radius-preset:hover { border-color: #0A2FFF; color: #0A2FFF; background: #EEF2FF; }
 
-        /* ── Card list — FIXED FOR MOBILE ── */
+        /* ── Card list ── */
         .sv-list {
           flex: 1;
           overflow-y: auto;
@@ -1695,19 +1629,16 @@ export default function DashboardPage() {
           flex-direction: column;
           gap: 5px;
           background: #F5F4F0;
-          /* Remove any min-height or max-height that clips content */
         }
 
-        /* ── Problem card — FIXED OVERFLOW ── */
+        /* ── Problem card ── */
         .sv-card {
           background: #fff; border: 1px solid #E8E7E2;
           border-left: 3px solid; border-radius: 10px;
-          /* KEY FIX: was overflow:hidden which clipped expanded content */
           overflow: visible;
           transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
           animation: sv-slideIn 0.15s ease both;
           box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-          /* Ensure card doesn't clip children */
           position: relative;
         }
         .sv-card--hovered { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); border-color: #D4D2CC; }
@@ -1717,12 +1648,10 @@ export default function DashboardPage() {
         .sv-card-top {
           display: flex; align-items: flex-start; justify-content: space-between;
           gap: 6px; margin-bottom: 6px;
-          /* Allow title to wrap on mobile instead of being clipped */
         }
         .sv-card-title {
           font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
           color: #0D1117; line-height: 1.3; letter-spacing: -0.01em;
-          /* KEY FIX: allow wrapping on mobile */
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1736,18 +1665,16 @@ export default function DashboardPage() {
         .sv-card-chevron { color: #B8BFCC; flex-shrink: 0; margin-top: 3px; transition: transform 0.18s ease; }
         .sv-card-chevron.rotated { transform: rotate(180deg); }
 
-        /* ── Card body — KEY FIX: no overflow hidden ── */
+        /* ── Card body ── */
         .sv-card-body {
           padding: 0 13px 13px;
           border-top: 1px solid #F0EFE9;
           animation: sv-fadeUp 0.15s ease;
-          /* KEY FIX: ensure body is fully visible */
           overflow: visible;
         }
         .sv-card-desc {
           font-family: 'Inter', sans-serif; font-size: 12px; color: #5C6070;
           line-height: 1.65; margin: 9px 0 8px;
-          /* Allow full text to show */
           word-break: break-word;
           white-space: normal;
         }
@@ -1963,7 +1890,7 @@ export default function DashboardPage() {
         .sv-field-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9098A8; margin-bottom: 6px; }
 
         /* ── Analytics/Reports panels ── */
-        .sv-panel-scroll { flex: 1; overflow-y: auto; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; background: #F5F4F0; }
+        .sv-panel-scroll { flex: 1; overflow-y: auto; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; background: #F5F4F0; -webkit-overflow-scrolling: touch; }
         .sv-panel-header { padding-bottom: 4px; }
         .sv-panel-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 800; color: #0D1117; letter-spacing: -0.03em; }
         .sv-panel-sub { font-family: 'Inter', sans-serif; font-size: 13px; color: #9098A8; margin-top: 3px; letter-spacing: -0.01em; font-weight: 400; }
@@ -1972,25 +1899,13 @@ export default function DashboardPage() {
         .sv-kpi:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); transform: translateY(-1px); }
         .sv-kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 12px 12px 0 0; }
         .sv-kpi-label { display: block; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #B8BFCC; margin-bottom: 8px; margin-top: 6px; }
-        .sv-kpi-value { display: block; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 7px; }
-        .sv-kpi-trend { font-family: 'DM Mono', monospace; font-size: 10px; color: #9098A8; }
+        .sv-kpi-value { display: block; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; }
         .sv-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .sv-chart-card { background: #fff; border: 1px solid #E8E7E2; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
         .sv-chart-card--center { align-items: center; }
         .sv-chart-title { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #9098A8; margin-bottom: 10px; }
         .sv-ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
         .sv-ring-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: #9098A8; }
-        .sv-bar-chart { display: flex; flex-direction: column; }
-        .sv-bar-track { display: flex; align-items: flex-end; gap: 3px; }
-        .sv-bar-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
-        .sv-bar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; opacity: 0.85; transition: height 0.5s ease; }
-        .sv-bar-labels { display: flex; gap: 3px; margin-top: 4px; }
-        .sv-bar-label { flex: 1; font-family: 'DM Mono', monospace; font-size: 8px; color: #B8BFCC; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .sv-heatmap { display: flex; gap: 2px; align-items: flex-end; height: 60px; }
-        .sv-heatmap-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
-        .sv-heatmap-bar { width: 100%; border-radius: 2px 2px 0 0; transition: all 0.15s; }
-        .sv-heatmap-labels { display: flex; justify-content: space-between; margin-top: 4px; }
-        .sv-heatmap-label { font-family: 'DM Mono', monospace; font-size: 8px; color: #B8BFCC; }
         .sv-sev-row-stat { margin-bottom: 9px; display: grid; grid-template-columns: 44px 1fr 24px; align-items: center; gap: 8px; }
         .sv-sev-stat-label { font-family: 'Inter', sans-serif; font-size: 11px; color: #5C6070; letter-spacing: -0.01em; }
         .sv-progress-track { height: 4px; background: #F0EFE9; border-radius: 3px; overflow: hidden; }
@@ -2055,7 +1970,27 @@ export default function DashboardPage() {
         .sv-fab:hover  { transform: scale(1.06); box-shadow: 0 6px 22px rgba(10,47,255,0.38); }
         .sv-fab:active { transform: scale(0.95); }
 
-        /* ── Mobile sidebar — FIXED ── */
+        /* ── Mobile bottom nav sheet (Dashboard/Análise/Relatórios) ── */
+        .sv-mobile-nav-sheet {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 750;
+          background: #fff; border-radius: 16px 16px 0 0;
+          box-shadow: 0 -4px 28px rgba(0,0,0,0.14);
+          padding: 8px 12px calc(20px + env(safe-area-inset-bottom, 0px));
+          animation: sv-sheetUp 0.22s cubic-bezier(0.32,0.72,0,1);
+        }
+        .sv-mobile-nav-item {
+          display: flex; align-items: center; gap: 12px; width: 100%;
+          padding: 13px 10px; background: none; border: none; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+          color: #5C6070; border-radius: 10px; transition: background 0.12s;
+          text-align: left;
+        }
+        .sv-mobile-nav-item.active { color: #0A2FFF; background: #EEF2FF; font-weight: 600; }
+        .sv-mobile-nav-item:active { background: #F5F4F0; }
+        .sv-mobile-nav-icon { width: 30px; height: 30px; border-radius: 8px; background: #F5F4F0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #9098A8; }
+        .sv-mobile-nav-item.active .sv-mobile-nav-icon { background: #fff; color: #0A2FFF; }
+
+        /* ── Mobile sidebar ── */
         .sv-mobile-sidebar {
           position: fixed;
           top: 0; left: 0; bottom: 0;
@@ -2063,7 +1998,6 @@ export default function DashboardPage() {
           max-width: 360px;
           background: #FAFAF8;
           z-index: 700;
-          /* KEY FIX: flex column so inner content can scroll */
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -2079,6 +2013,20 @@ export default function DashboardPage() {
         .sv-mobile-title { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: #0D1117; }
         .sv-mobile-title span { color: #0A2FFF; }
 
+        /* ── Mobile top bar for Análise/Relatórios ── */
+        .sv-mobile-panel-topbar {
+          display: none;
+          align-items: center; gap: 10px;
+          padding: 10px 14px; background: #fff; border-bottom: 1px solid #E8E7E2;
+          flex-shrink: 0;
+        }
+        .sv-mobile-panel-back {
+          width: 30px; height: 30px; border-radius: 8px; border: 1px solid #E8E7E2;
+          background: #fff; display: flex; align-items: center; justify-content: center;
+          color: #5C6070; cursor: pointer; flex-shrink: 0;
+        }
+        .sv-mobile-panel-topbar-title { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; color: #0D1117; letter-spacing: -0.01em; }
+
         /* ── Bottom sheet ── */
         .sv-bottom-sheet {
           position: fixed; left: 0; right: 0; bottom: 0; z-index: 600;
@@ -2086,7 +2034,6 @@ export default function DashboardPage() {
           box-shadow: 0 -4px 28px rgba(0,0,0,0.12);
           padding: 14px 16px 36px;
           display: flex; flex-direction: column; gap: 14px;
-          /* KEY FIX: proper scroll for tall forms */
           max-height: 92dvh;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
@@ -2106,76 +2053,65 @@ export default function DashboardPage() {
           .sv-nav { display: none; }
           .sv-topbar-right { display: none; }
           .sv-logo-sub { display: none; }
-          /* Hide desktop sidebar on mobile */
           .sv-sidebar { display: none; }
           .sv-sidebar-toggle { display: none; }
           .sv-body { flex-direction: column; }
           .sv-detail-bar { display: none; }
           .sv-form-drawer { display: none; }
-          .sv-main-panels { display: none; }
 
-          /* KEY FIX: mobile sidebar needs full height with inner scroll */
-          .sv-mobile-sidebar {
-            display: flex !important;
-          }
+          .sv-mobile-sidebar { display: flex !important; }
 
-          /* KEY FIX: the list inside mobile sidebar must scroll */
           .sv-mobile-sidebar .sv-list {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
-            /* Remove fixed heights that clip */
             min-height: 0;
           }
+          .sv-mobile-sidebar .sv-card { overflow: visible; }
+          .sv-mobile-sidebar .sv-card-body { overflow: visible; }
+          .sv-mobile-sidebar .sv-card-title { white-space: normal; word-break: break-word; }
+          .sv-mobile-sidebar .sv-card-top { flex-wrap: wrap; }
+          .sv-mobile-sidebar .sv-card-actions { flex-wrap: wrap; gap: 5px; }
+          .sv-mobile-sidebar .sv-btn--sm { font-size: 12px; padding: 7px 13px; }
+          .sv-mobile-sidebar .sv-filters-block { flex-shrink: 0; overflow-y: auto; }
 
-          /* KEY FIX: cards in mobile list must not clip */
-          .sv-mobile-sidebar .sv-card {
-            overflow: visible;
+          /* Analytics / Reports full-screen on mobile */
+          .sv-main-panels {
+            display: flex !important;
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: #F5F4F0;
+            flex-direction: column;
           }
+          .sv-mobile-panel-topbar { display: flex; }
+          .sv-panel-scroll { padding: 14px 14px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
+          .sv-panel-title { font-size: 17px; }
+          .sv-panel-sub { font-size: 12px; }
 
-          /* KEY FIX: card body must be fully visible */
-          .sv-mobile-sidebar .sv-card-body {
-            overflow: visible;
-          }
-
-          /* Make card title wrap on small screens */
-          .sv-mobile-sidebar .sv-card-title {
-            white-space: normal;
-            word-break: break-word;
-          }
-
-          /* Stack card top row on very small screens */
-          .sv-mobile-sidebar .sv-card-top {
-            flex-wrap: wrap;
-          }
-
-          /* Card actions wrap nicely */
-          .sv-mobile-sidebar .sv-card-actions {
-            flex-wrap: wrap;
-            gap: 5px;
-          }
-
-          /* Slightly larger touch targets */
-          .sv-mobile-sidebar .sv-btn--sm {
-            font-size: 12px;
-            padding: 7px 13px;
-          }
-
-          /* Filters block: allow scroll if content is tall */
-          .sv-mobile-sidebar .sv-filters-block {
-            flex-shrink: 0;
-            overflow-y: auto;
-          }
+          /* Collapse multi-column grids to 1 column */
+          .sv-kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+          .sv-kpi { padding: 13px 13px 11px; }
+          .sv-kpi-value { font-size: 22px; }
+          .sv-charts-row { grid-template-columns: 1fr; gap: 8px; }
+          .sv-report-stats { grid-template-columns: 1fr; gap: 7px; }
+          .sv-report-stat-value { font-size: 20px; }
+          .sv-export-row .sv-btn { flex: 1; justify-content: center; }
+          .sv-period-row { gap: 6px; }
+          .sv-period-btn { padding: 6px 12px; font-size: 11px; flex: 1 0 auto; text-align: center; }
+          .sv-table-row, .sv-report-list-row { padding: 10px 12px; }
         }
 
         @media (min-width: 769px) {
           .sv-mobile-new-btn   { display: none; }
           .sv-bottom-sheet     { display: none; }
           .sv-mobile-sidebar   { display: none !important; }
+          .sv-mobile-nav-sheet { display: none !important; }
           .sv-overlay          { display: none; }
           .sv-fab              { display: none; }
           .sv-sheet-overlay    { display: none; }
+          .sv-mobile-panel-topbar { display: none !important; }
         }
       `}</style>
 
@@ -2272,12 +2208,24 @@ export default function DashboardPage() {
 
           {activeNav === 'analytics' && (
             <div className="sv-main-panels" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div className="sv-mobile-panel-topbar">
+                <button className="sv-mobile-panel-back" onClick={() => goToNav('dashboard')} aria-label="Voltar">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <span className="sv-mobile-panel-topbar-title">{t.analyticsTitle}</span>
+              </div>
               {AnalyticsPanel}
             </div>
           )}
 
           {activeNav === 'reports' && (
             <div className="sv-main-panels" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div className="sv-mobile-panel-topbar">
+                <button className="sv-mobile-panel-back" onClick={() => goToNav('dashboard')} aria-label="Voltar">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <span className="sv-mobile-panel-topbar-title">{t.reportsTitle}</span>
+              </div>
               {ReportsPanel}
             </div>
           )}
@@ -2374,8 +2322,8 @@ export default function DashboardPage() {
                             {[
                               { label: t.myReports,    svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', action: () => { setViewMode('meus'); setRightPanel(null) } },
                               { label: t.statsTitle,   svgPath: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', action: () => { setShowStats(true); setRightPanel(null) } },
-                              { label: t.navAnalytics, svgPath: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16', action: () => { setActiveNav('analytics'); setRightPanel(null) } },
-                              { label: t.navReports,   svgPath: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8', action: () => { setActiveNav('reports'); setRightPanel(null) } },
+                              { label: t.navAnalytics, svgPath: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16', action: () => { goToNav('analytics'); setRightPanel(null) } },
+                              { label: t.navReports,   svgPath: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8', action: () => { goToNav('reports'); setRightPanel(null) } },
                             ].map(item => (
                               <button key={item.label} className="sv-menu-item" onClick={item.action}>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={item.svgPath}/></svg>
@@ -2450,15 +2398,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* FAB */}
-      <button className="sv-fab" onClick={() => setMobileSidebarOpen(true)} aria-label="Abrir lista">
+      {/* FAB — opens mobile nav chooser */}
+      <button className="sv-fab" onClick={() => setMobileNavOpen(true)} aria-label="Menu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="8" y1="6"  x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
           <line x1="3" y1="6"  x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
         </svg>
       </button>
 
-      {/* Mobile overlay + sidebar */}
+      {/* Mobile overlay + sidebar (list) */}
       <div className={`sv-overlay${mobileSidebarOpen ? ' open' : ''}`} onClick={() => setMobileSidebarOpen(false)} />
       <div className={`sv-mobile-sidebar${mobileSidebarOpen ? ' open' : ''}`}>
         <div className="sv-mobile-header">
@@ -2467,6 +2415,35 @@ export default function DashboardPage() {
         </div>
         {SidebarContent}
       </div>
+
+      {/* Mobile nav chooser sheet: Dashboard / Análise / Relatórios */}
+      {mobileNavOpen && (
+        <>
+          <div className="sv-sheet-overlay" onClick={() => setMobileNavOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 740, background: 'rgba(0,0,0,0.22)', animation: 'sv-fadeIn 0.15s ease' }} />
+          <div className="sv-mobile-nav-sheet">
+            <div className="sv-sheet-handle" />
+            {([
+              ['dashboard', t.navDashboard, 'M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 21V12h6v9'],
+              ['analytics', t.navAnalytics, 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16'],
+              ['reports',   t.navReports,   'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8'],
+            ] as [ActiveNav, string, string][]).map(([nav, label, svgPath]) => (
+              <button
+                key={nav}
+                className={`sv-mobile-nav-item${activeNav === nav ? ' active' : ''}`}
+                onClick={() => {
+                  if (nav === 'dashboard') { goToNav('dashboard'); setMobileSidebarOpen(true) }
+                  else goToNav(nav)
+                }}
+              >
+                <span className="sv-mobile-nav-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={svgPath}/></svg>
+                </span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Mobile bottom sheet (form) */}
       {formMode && (
