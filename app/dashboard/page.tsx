@@ -2234,7 +2234,7 @@ export default function DashboardPage() {
             <>
               <div className="sv-subbar">
                 <span className="sv-subbar-loc">
-                  Porto, PT <span style={{ color: '#E8E7E2' }}> / </span><span>{t.allZones}</span>
+                  Braga, PT <span style={{ color: '#E8E7E2' }}> / </span><span>{t.allZones}</span>
                   {radiusKm && userLocation && <span style={{ color: DS.blue }}> · {radiusKm}km</span>}
                 </span>
                 <span className={`sv-subbar-status${formMode ? ' active' : ''}`}>

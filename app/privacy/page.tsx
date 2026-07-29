@@ -203,6 +203,19 @@ export default function PrivacyPage() {
                 Política de privacidade
               </a>
             </li>
+            <li>
+              <strong>OpenStreetMap Foundation (Nominatim)</strong> —
+              conversão de coordenadas GPS em endereços legíveis
+              (geocodificação inversa).{" "}
+              <a
+                href="https://osmfoundation.org/wiki/Privacy_Policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                Política de privacidade
+              </a>
+            </li>
           </ul>
           <p className="mt-3">
             Estes prestadores apenas tratam os dados nas condições por
