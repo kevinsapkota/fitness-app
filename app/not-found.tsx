@@ -188,7 +188,7 @@ export default function NotFound() {
           color: DS.textFaint,
           letterSpacing: "0.04em",
         }}>
-          streetviz.app
+          streetviz.vercel.app
         </p>
       </div>
     </div>

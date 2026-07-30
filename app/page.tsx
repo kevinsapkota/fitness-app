@@ -670,7 +670,7 @@ export default function Home() {
                   fontSize: 10, color: DS.textMuted,
                   fontFamily: DS.mono, textAlign: "center",
                 }}>
-                  streetviz.app/dashboard
+                  streetviz.vercel.app/dashboard
                 </div>
               </div>
             </div>
